@@ -1,0 +1,310 @@
+import { ItemView, WorkspaceLeaf, Menu, setIcon } from 'obsidian';
+import { ReadingItem } from '../core/domain/entities/reading-item';
+import { ReadingStatusType } from '../core/domain/value-objects/reading-status';
+import { PriorityLevelType } from '../core/domain/value-objects/priority-level';
+import {
+  GetQueueItemsUseCase,
+  UpdateItemStatusUseCase,
+  DeleteReadingItemUseCase,
+  StatusAction,
+} from '../core/application/use-cases';
+import type ReadingQueuePlugin from '../main';
+
+export const VIEW_TYPE_READING_QUEUE = 'reading-queue-view';
+
+export class ReadingQueueView extends ItemView {
+  private plugin: ReadingQueuePlugin;
+  private items: ReadingItem[] = [];
+  private currentFilter: {
+    status?: ReadingStatusType[];
+    priority?: PriorityLevelType[];
+  } = {};
+
+  constructor(leaf: WorkspaceLeaf, plugin: ReadingQueuePlugin) {
+    super(leaf);
+    this.plugin = plugin;
+  }
+
+  getViewType(): string {
+    return VIEW_TYPE_READING_QUEUE;
+  }
+
+  getDisplayText(): string {
+    return 'Reading Queue';
+  }
+
+  getIcon(): string {
+    return 'book-open';
+  }
+
+  async onOpen(): Promise<void> {
+    await this.render();
+  }
+
+  async onClose(): Promise<void> {
+    // Cleanup if needed
+  }
+
+  async refresh(): Promise<void> {
+    await this.render();
+  }
+
+  private async render(): Promise<void> {
+    const container = this.containerEl.children[1];
+    container.empty();
+    container.addClass('reading-queue-container');
+
+    // Header
+    this.renderHeader(container);
+
+    // Filters
+    this.renderFilters(container);
+
+    // Load items
+    await this.loadItems();
+
+    // Content
+    if (this.items.length === 0) {
+      this.renderEmptyState(container);
+    } else {
+      this.renderItems(container);
+    }
+  }
+
+  private renderHeader(container: Element): void {
+    const header = container.createDiv({ cls: 'reading-queue-header' });
+
+    header.createEl('h4', { text: 'Reading Queue' });
+
+    const addBtn = header.createEl('button', { cls: 'reading-queue-action-btn primary' });
+    setIcon(addBtn, 'plus');
+    addBtn.addEventListener('click', () => {
+      this.plugin.showAddItemModal();
+    });
+  }
+
+  private renderFilters(container: Element): void {
+    const filtersEl = container.createDiv({ cls: 'reading-queue-filters' });
+
+    // Status filter
+    const statusSelect = filtersEl.createEl('select');
+    statusSelect.createEl('option', { text: '모든 상태', value: '' });
+    statusSelect.createEl('option', { text: '📚 대기', value: ReadingStatusType.QUEUE });
+    statusSelect.createEl('option', { text: '📖 읽는 중', value: ReadingStatusType.READING });
+    statusSelect.createEl('option', { text: '✅ 완료', value: ReadingStatusType.DONE });
+    statusSelect.createEl('option', { text: '❌ 포기', value: ReadingStatusType.ABANDONED });
+
+    statusSelect.addEventListener('change', async () => {
+      if (statusSelect.value) {
+        this.currentFilter.status = [statusSelect.value as ReadingStatusType];
+      } else {
+        delete this.currentFilter.status;
+      }
+      await this.render();
+    });
+
+    // Priority filter
+    const prioritySelect = filtersEl.createEl('select');
+    prioritySelect.createEl('option', { text: '모든 우선순위', value: '' });
+    prioritySelect.createEl('option', { text: '🔴 높음', value: PriorityLevelType.HIGH });
+    prioritySelect.createEl('option', { text: '🟡 보통', value: PriorityLevelType.MEDIUM });
+    prioritySelect.createEl('option', { text: '🟢 낮음', value: PriorityLevelType.LOW });
+
+    prioritySelect.addEventListener('change', async () => {
+      if (prioritySelect.value) {
+        this.currentFilter.priority = [prioritySelect.value as PriorityLevelType];
+      } else {
+        delete this.currentFilter.priority;
+      }
+      await this.render();
+    });
+  }
+
+  private async loadItems(): Promise<void> {
+    const useCase = new GetQueueItemsUseCase(this.plugin.repository);
+    const result = await useCase.execute({
+      filter: {
+        status: this.currentFilter.status,
+        priority: this.currentFilter.priority,
+        includeStale: true,
+      },
+      sortBy: 'priority',
+      sortOrder: 'desc',
+    });
+
+    if (result.success) {
+      this.items = result.items;
+    } else {
+      this.items = [];
+    }
+  }
+
+  private renderEmptyState(container: Element): void {
+    const emptyEl = container.createDiv({ cls: 'reading-queue-empty' });
+    emptyEl.createDiv({ cls: 'reading-queue-empty-icon', text: '📚' });
+    emptyEl.createEl('p', { text: '읽기 큐가 비어있습니다.' });
+    emptyEl.createEl('p', { text: '+ 버튼을 눌러 읽을 자료를 추가해보세요.' });
+  }
+
+  private renderItems(container: Element): void {
+    const listEl = container.createDiv({ cls: 'reading-queue-list' });
+
+    for (const item of this.items) {
+      this.renderItem(listEl, item);
+    }
+  }
+
+  private renderItem(container: Element, item: ReadingItem): void {
+    const itemEl = container.createDiv({
+      cls: `reading-queue-item priority-${item.priority.getValue()} status-${item.status.getValue()}`,
+    });
+
+    // Title row
+    const titleRow = itemEl.createDiv({ cls: 'reading-queue-item-title' });
+    titleRow.createSpan({ cls: 'status-icon', text: item.status.getIcon() });
+    titleRow.createSpan({ text: item.title });
+
+    // Meta row
+    const metaRow = itemEl.createDiv({ cls: 'reading-queue-item-meta' });
+
+    // Priority badge
+    const priorityBadge = metaRow.createSpan({
+      cls: `priority-badge ${item.priority.getValue()}`,
+      text: item.priority.getDisplayText(),
+    });
+
+    // Time estimate
+    if (item.estimatedMinutes) {
+      const timeEl = metaRow.createSpan({ cls: 'time-estimate' });
+      setIcon(timeEl.createSpan(), 'clock');
+      timeEl.createSpan({ text: `${item.estimatedMinutes}분` });
+    }
+
+    // Tags
+    if (item.tags.length > 0) {
+      const tagsEl = itemEl.createDiv({ cls: 'reading-queue-tags' });
+      for (const tag of item.tags.slice(0, 3)) {
+        tagsEl.createSpan({ cls: 'reading-queue-tag', text: `#${tag}` });
+      }
+      if (item.tags.length > 3) {
+        tagsEl.createSpan({ cls: 'reading-queue-tag', text: `+${item.tags.length - 3}` });
+      }
+    }
+
+    // Progress bar (for reading items)
+    if (item.status.isReading() && item.progress > 0) {
+      const progressEl = itemEl.createDiv({ cls: 'reading-queue-progress' });
+      const progressBar = progressEl.createDiv({ cls: 'reading-queue-progress-bar' });
+      progressBar.style.width = `${item.progress}%`;
+    }
+
+    // Actions
+    const actionsEl = itemEl.createDiv({ cls: 'reading-queue-actions' });
+    this.renderItemActions(actionsEl, item);
+
+    // Context menu
+    itemEl.addEventListener('contextmenu', (e) => {
+      e.preventDefault();
+      this.showItemContextMenu(e, item);
+    });
+
+    // Click to open URL
+    if (item.url) {
+      itemEl.addEventListener('click', (e) => {
+        if (!(e.target as HTMLElement).closest('.reading-queue-actions')) {
+          window.open(item.url, '_blank');
+        }
+      });
+      itemEl.style.cursor = 'pointer';
+    }
+  }
+
+  private renderItemActions(container: Element, item: ReadingItem): void {
+    if (item.status.isQueue()) {
+      const startBtn = container.createEl('button', {
+        cls: 'reading-queue-action-btn',
+        text: '시작',
+      });
+      startBtn.addEventListener('click', () => this.updateStatus(item.id, 'start'));
+    }
+
+    if (item.status.isReading()) {
+      const doneBtn = container.createEl('button', {
+        cls: 'reading-queue-action-btn primary',
+        text: '완료',
+      });
+      doneBtn.addEventListener('click', () => this.updateStatus(item.id, 'done'));
+    }
+
+    if (item.status.isActive()) {
+      const abandonBtn = container.createEl('button', {
+        cls: 'reading-queue-action-btn',
+        text: '포기',
+      });
+      abandonBtn.addEventListener('click', () => this.updateStatus(item.id, 'abandon'));
+    }
+
+    if (item.status.isDone() || item.status.isAbandoned()) {
+      const restoreBtn = container.createEl('button', {
+        cls: 'reading-queue-action-btn',
+        text: '복원',
+      });
+      restoreBtn.addEventListener('click', () => this.updateStatus(item.id, 'backToQueue'));
+    }
+  }
+
+  private showItemContextMenu(e: MouseEvent, item: ReadingItem): void {
+    const menu = new Menu();
+
+    if (item.url) {
+      menu.addItem((menuItem) => {
+        menuItem
+          .setTitle('URL 열기')
+          .setIcon('external-link')
+          .onClick(() => {
+            window.open(item.url, '_blank');
+          });
+      });
+    }
+
+    menu.addItem((menuItem) => {
+      menuItem
+        .setTitle('수정')
+        .setIcon('pencil')
+        .onClick(() => {
+          this.plugin.showEditItemModal(item);
+        });
+    });
+
+    menu.addSeparator();
+
+    menu.addItem((menuItem) => {
+      menuItem
+        .setTitle('삭제')
+        .setIcon('trash')
+        .onClick(async () => {
+          await this.deleteItem(item.id);
+        });
+    });
+
+    menu.showAtMouseEvent(e);
+  }
+
+  private async updateStatus(itemId: string, action: StatusAction): Promise<void> {
+    const useCase = new UpdateItemStatusUseCase(this.plugin.repository);
+    const result = await useCase.execute({ itemId, action });
+
+    if (result.success) {
+      await this.render();
+    }
+  }
+
+  private async deleteItem(itemId: string): Promise<void> {
+    const useCase = new DeleteReadingItemUseCase(this.plugin.repository);
+    const result = await useCase.execute({ itemId });
+
+    if (result.success) {
+      await this.render();
+    }
+  }
+}
