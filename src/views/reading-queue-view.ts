@@ -8,6 +8,7 @@ import {
   DeleteReadingItemUseCase,
   StatusAction,
 } from '../core/application/use-cases';
+import { InsightsModal } from './insights-modal';
 import type ReadingQueuePlugin from '../main';
 
 export const VIEW_TYPE_READING_QUEUE = 'reading-queue-view';
@@ -191,6 +192,16 @@ export class ReadingQueueView extends ItemView {
       }
     }
 
+    // Summary preview (if analysis exists)
+    if (item.analysis?.summary) {
+      const summaryEl = itemEl.createDiv({ cls: 'reading-queue-summary' });
+      const previewText = item.analysis.summary.length > 100
+        ? item.analysis.summary.substring(0, 100) + '...'
+        : item.analysis.summary;
+      summaryEl.createEl('span', { text: '📝 ', cls: 'summary-icon' });
+      summaryEl.createEl('span', { text: previewText, cls: 'summary-text' });
+    }
+
     // Progress bar (for reading items)
     if (item.status.isReading() && item.progress > 0) {
       const progressEl = itemEl.createDiv({ cls: 'reading-queue-progress' });
@@ -244,6 +255,16 @@ export class ReadingQueueView extends ItemView {
       abandonBtn.addEventListener('click', () => this.updateStatus(item.id, 'abandon'));
     }
 
+    // Insights button for items with analysis or completed items
+    if (item.analysis || item.status.isDone()) {
+      const insightsBtn = container.createEl('button', {
+        cls: 'reading-queue-action-btn insights',
+        text: '💡',
+      });
+      insightsBtn.title = '인사이트 보기';
+      insightsBtn.addEventListener('click', () => this.showInsightsModal(item));
+    }
+
     if (item.status.isDone() || item.status.isAbandoned()) {
       const restoreBtn = container.createEl('button', {
         cls: 'reading-queue-action-btn',
@@ -251,6 +272,11 @@ export class ReadingQueueView extends ItemView {
       });
       restoreBtn.addEventListener('click', () => this.updateStatus(item.id, 'backToQueue'));
     }
+  }
+
+  private showInsightsModal(item: ReadingItem): void {
+    const modal = new InsightsModal(this.plugin, item);
+    modal.open();
   }
 
   private showItemContextMenu(e: MouseEvent, item: ReadingItem): void {

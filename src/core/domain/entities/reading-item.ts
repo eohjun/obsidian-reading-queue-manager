@@ -1,5 +1,6 @@
 import { ReadingStatus, ReadingStatusType } from '../value-objects/reading-status';
 import { PriorityLevel, PriorityLevelType } from '../value-objects/priority-level';
+import { ContentAnalysis, ContentAnalysisData } from './content-analysis';
 
 export type ReadingSourceType = 'manual' | 'pocket' | 'instapaper' | 'zotero';
 
@@ -17,6 +18,9 @@ export interface ReadingItemProps {
   addedAt: Date;
   startedAt?: Date;
   completedAt?: Date;
+  // AI Analysis
+  analysis?: ContentAnalysis;
+  linkedNotes?: string[];
 }
 
 export interface ReadingItemData {
@@ -33,6 +37,9 @@ export interface ReadingItemData {
   addedAt: string;
   startedAt?: string;
   completedAt?: string;
+  // AI Analysis
+  analysis?: ContentAnalysisData;
+  linkedNotes?: string[];
 }
 
 export class ReadingItem {
@@ -49,6 +56,9 @@ export class ReadingItem {
   private readonly _addedAt: Date;
   private _startedAt?: Date;
   private _completedAt?: Date;
+  // AI Analysis
+  private _analysis?: ContentAnalysis;
+  private _linkedNotes: string[];
 
   private constructor(props: ReadingItemProps) {
     this._id = props.id;
@@ -64,6 +74,8 @@ export class ReadingItem {
     this._addedAt = props.addedAt;
     this._startedAt = props.startedAt;
     this._completedAt = props.completedAt;
+    this._analysis = props.analysis;
+    this._linkedNotes = props.linkedNotes ? [...props.linkedNotes] : [];
   }
 
   static create(props: Omit<ReadingItemProps, 'id' | 'addedAt' | 'progress' | 'status'>): ReadingItem {
@@ -91,6 +103,8 @@ export class ReadingItem {
       addedAt: new Date(data.addedAt),
       startedAt: data.startedAt ? new Date(data.startedAt) : undefined,
       completedAt: data.completedAt ? new Date(data.completedAt) : undefined,
+      analysis: data.analysis ? ContentAnalysis.fromData(data.analysis) : undefined,
+      linkedNotes: data.linkedNotes,
     });
   }
 
@@ -108,6 +122,8 @@ export class ReadingItem {
   get addedAt(): Date { return this._addedAt; }
   get startedAt(): Date | undefined { return this._startedAt; }
   get completedAt(): Date | undefined { return this._completedAt; }
+  get analysis(): ContentAnalysis | undefined { return this._analysis; }
+  get linkedNotes(): string[] { return [...this._linkedNotes]; }
 
   // Domain Methods
   startReading(): void {
@@ -199,6 +215,57 @@ export class ReadingItem {
     return this._tags.includes(tag.trim().toLowerCase());
   }
 
+  // AI Analysis Methods
+  setAnalysis(analysis: ContentAnalysis): void {
+    this._analysis = analysis;
+
+    // 분석 결과에서 예상 읽기 시간 업데이트 (없는 경우에만)
+    if (!this._estimatedMinutes && analysis.estimatedReadingTime) {
+      this._estimatedMinutes = analysis.estimatedReadingTime;
+    }
+  }
+
+  clearAnalysis(): void {
+    this._analysis = undefined;
+  }
+
+  hasAnalysis(): boolean {
+    return this._analysis !== undefined;
+  }
+
+  /**
+   * Apply suggested tags from analysis
+   */
+  applySuggestedTags(): void {
+    if (!this._analysis) return;
+    for (const tag of this._analysis.suggestedTags) {
+      this.addTag(tag);
+    }
+  }
+
+  /**
+   * Apply suggested priority from analysis
+   */
+  applySuggestedPriority(): void {
+    if (!this._analysis?.suggestedPriority) return;
+    this._priority = PriorityLevel.fromString(this._analysis.suggestedPriority);
+  }
+
+  // Linked Notes Methods
+  addLinkedNote(notePath: string): void {
+    if (!this._linkedNotes.includes(notePath)) {
+      this._linkedNotes.push(notePath);
+    }
+  }
+
+  removeLinkedNote(notePath: string): void {
+    this._linkedNotes = this._linkedNotes.filter(p => p !== notePath);
+  }
+
+  hasLinkedNotes(): boolean {
+    return this._linkedNotes.length > 0;
+  }
+
   // 시간 예산 내 완료 가능 여부
   fitsTimeBudget(budgetMinutes: number): boolean {
     if (!this._estimatedMinutes) return true; // 시간 미지정은 통과
@@ -234,6 +301,8 @@ export class ReadingItem {
       addedAt: this._addedAt.toISOString(),
       startedAt: this._startedAt?.toISOString(),
       completedAt: this._completedAt?.toISOString(),
+      analysis: this._analysis?.toData(),
+      linkedNotes: this._linkedNotes.length > 0 ? [...this._linkedNotes] : undefined,
     };
   }
 }

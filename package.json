@@ -1,7 +1,7 @@
 {
   "name": "obsidian-reading-queue-manager",
-  "version": "0.1.0",
-  "description": "읽기 자료를 수집, 우선순위화, 상태 추적하고 완독 후 자동으로 노트 템플릿을 생성하는 PKM 도구",
+  "version": "0.2.0",
+  "description": "읽기 자료를 수집, AI 기반 분석/태깅, 우선순위화, 상태 추적하고 완독 후 영구 노트 작성을 지원하는 PKM 도구",
   "main": "dist/main.js",
   "scripts": {
     "dev": "node esbuild.config.mjs",

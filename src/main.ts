@@ -3,6 +3,20 @@ import { ReadingItem } from './core/domain/entities/reading-item';
 import { IReadingQueueRepository } from './core/domain/interfaces/reading-queue-repository.interface';
 import { ObsidianReadingQueueRepository } from './core/adapters/obsidian/reading-queue-repository';
 import {
+  ClaudeProvider,
+  OpenAIProvider,
+  GeminiProvider,
+  GrokProvider,
+} from './core/adapters/llm';
+import {
+  initializeAIService,
+  updateAIServiceSettings,
+  resetAIService,
+  getAIService,
+} from './core/application/services/ai-service';
+import { CostTracker } from './core/application/services/cost-tracker';
+import { getEventEmitter, resetEventEmitter } from './core/application/services/event-emitter';
+import {
   ReadingQueueView,
   VIEW_TYPE_READING_QUEUE,
   AddItemModal,
@@ -14,6 +28,7 @@ import {
 export default class ReadingQueuePlugin extends Plugin {
   settings!: ReadingQueueSettings;
   repository!: IReadingQueueRepository;
+  costTracker!: CostTracker;
   private _repositoryImpl!: ObsidianReadingQueueRepository;
 
   async onload(): Promise<void> {
@@ -26,6 +41,9 @@ export default class ReadingQueuePlugin extends Plugin {
     this._repositoryImpl = new ObsidianReadingQueueRepository(this);
     this.repository = this._repositoryImpl;
     await this._repositoryImpl.load();
+
+    // AI Service 초기화
+    this.initializeAIServices();
 
     // View 등록
     this.registerView(
@@ -75,14 +93,61 @@ export default class ReadingQueuePlugin extends Plugin {
 
   async onunload(): Promise<void> {
     console.log('Unloading Reading Queue Manager plugin');
+
+    // Cleanup AI services
+    resetAIService();
+    resetEventEmitter();
+  }
+
+  private initializeAIServices(): void {
+    // Initialize EventEmitter
+    const emitter = getEventEmitter();
+
+    // Initialize CostTracker
+    this.costTracker = new CostTracker(
+      this.settings.ai.budgetLimit,
+      emitter
+    );
+
+    // Initialize AI Service with providers
+    const aiService = initializeAIService(this.settings.ai);
+
+    // Register all LLM providers
+    aiService.registerProvider(new ClaudeProvider());
+    aiService.registerProvider(new OpenAIProvider());
+    aiService.registerProvider(new GeminiProvider());
+    aiService.registerProvider(new GrokProvider());
+
+    console.log('AI services initialized');
   }
 
   async loadSettings(): Promise<void> {
-    this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
+    const loaded = await this.loadData();
+    this.settings = Object.assign({}, DEFAULT_SETTINGS, loaded);
+
+    // Ensure ai settings are properly merged
+    if (loaded?.ai) {
+      this.settings.ai = Object.assign({}, DEFAULT_SETTINGS.ai, loaded.ai);
+      // Merge nested objects
+      if (loaded.ai.apiKeys) {
+        this.settings.ai.apiKeys = { ...DEFAULT_SETTINGS.ai.apiKeys, ...loaded.ai.apiKeys };
+      }
+      if (loaded.ai.models) {
+        this.settings.ai.models = { ...DEFAULT_SETTINGS.ai.models, ...loaded.ai.models };
+      }
+    }
   }
 
   async saveSettings(): Promise<void> {
     await this.saveData(this.settings);
+
+    // Update AI service with new settings
+    updateAIServiceSettings(this.settings.ai);
+
+    // Update cost tracker budget
+    if (this.costTracker) {
+      this.costTracker.setBudgetLimit(this.settings.ai.budgetLimit);
+    }
   }
 
   async activateView(): Promise<void> {
@@ -166,5 +231,12 @@ export default class ReadingQueuePlugin extends Plugin {
         view.refresh();
       }
     }
+  }
+
+  /**
+   * Get the AI service instance
+   */
+  getAIService() {
+    return getAIService();
   }
 }
