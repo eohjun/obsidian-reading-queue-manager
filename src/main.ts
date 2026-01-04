@@ -123,17 +123,46 @@ export default class ReadingQueuePlugin extends Plugin {
 
   async loadSettings(): Promise<void> {
     const loaded = await this.loadData();
-    this.settings = Object.assign({}, DEFAULT_SETTINGS, loaded);
 
-    // Ensure ai settings are properly merged
-    if (loaded?.ai) {
-      this.settings.ai = Object.assign({}, DEFAULT_SETTINGS.ai, loaded.ai);
-      // Merge nested objects
-      if (loaded.ai.apiKeys) {
-        this.settings.ai.apiKeys = { ...DEFAULT_SETTINGS.ai.apiKeys, ...loaded.ai.apiKeys };
-      }
-      if (loaded.ai.models) {
-        this.settings.ai.models = { ...DEFAULT_SETTINGS.ai.models, ...loaded.ai.models };
+    // Start with defaults (deep copy to prevent mutation)
+    this.settings = {
+      ...DEFAULT_SETTINGS,
+      ai: {
+        ...DEFAULT_SETTINGS.ai,
+        apiKeys: { ...DEFAULT_SETTINGS.ai.apiKeys },
+        models: { ...DEFAULT_SETTINGS.ai.models },
+        featureModels: { ...DEFAULT_SETTINGS.ai.featureModels },
+      },
+    };
+
+    if (loaded) {
+      // Merge top-level primitive values
+      if (loaded.defaultPriority !== undefined) this.settings.defaultPriority = loaded.defaultPriority;
+      if (loaded.staleDaysThreshold !== undefined) this.settings.staleDaysThreshold = loaded.staleDaysThreshold;
+      if (loaded.showCompletedItems !== undefined) this.settings.showCompletedItems = loaded.showCompletedItems;
+      if (loaded.showAbandonedItems !== undefined) this.settings.showAbandonedItems = loaded.showAbandonedItems;
+      if (loaded.defaultNoteFolder !== undefined) this.settings.defaultNoteFolder = loaded.defaultNoteFolder;
+
+      // Deep merge AI settings
+      if (loaded.ai) {
+        // Merge primitive AI settings
+        if (loaded.ai.provider !== undefined) this.settings.ai.provider = loaded.ai.provider;
+        if (loaded.ai.defaultLanguage !== undefined) this.settings.ai.defaultLanguage = loaded.ai.defaultLanguage;
+        if (loaded.ai.budgetLimit !== undefined) this.settings.ai.budgetLimit = loaded.ai.budgetLimit;
+        if (loaded.ai.autoAnalyzeOnAdd !== undefined) this.settings.ai.autoAnalyzeOnAdd = loaded.ai.autoAnalyzeOnAdd;
+        if (loaded.ai.autoSuggestTags !== undefined) this.settings.ai.autoSuggestTags = loaded.ai.autoSuggestTags;
+        if (loaded.ai.autoSuggestPriority !== undefined) this.settings.ai.autoSuggestPriority = loaded.ai.autoSuggestPriority;
+
+        // Deep merge nested objects (preserve user values while adding new defaults)
+        if (loaded.ai.apiKeys) {
+          this.settings.ai.apiKeys = { ...this.settings.ai.apiKeys, ...loaded.ai.apiKeys };
+        }
+        if (loaded.ai.models) {
+          this.settings.ai.models = { ...this.settings.ai.models, ...loaded.ai.models };
+        }
+        if (loaded.ai.featureModels) {
+          this.settings.ai.featureModels = { ...this.settings.ai.featureModels, ...loaded.ai.featureModels };
+        }
       }
     }
   }
