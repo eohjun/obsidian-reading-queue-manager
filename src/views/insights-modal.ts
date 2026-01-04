@@ -228,11 +228,20 @@ export class InsightsModal extends Modal {
     // Generate note content
     const content = this.generateNoteContent(topic);
 
-    // Create file
+    // Create file with folder support
     const fileName = `${topic.title.replace(/[\\/:*?"<>|]/g, '')}.md`;
-    const filePath = fileName;
+    const folderPath = this.plugin.settings.defaultNoteFolder;
+    const filePath = folderPath ? `${folderPath}/${fileName}` : fileName;
 
     try {
+      // Ensure folder exists if specified
+      if (folderPath) {
+        const folderExists = this.app.vault.getAbstractFileByPath(folderPath);
+        if (!folderExists) {
+          await this.app.vault.createFolder(folderPath);
+        }
+      }
+
       const existingFile = this.app.vault.getAbstractFileByPath(filePath);
       if (existingFile) {
         new Notice('같은 이름의 노트가 이미 존재합니다.');

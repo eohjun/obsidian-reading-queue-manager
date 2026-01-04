@@ -1,4 +1,4 @@
-import { PluginSettingTab, Setting, Notice } from 'obsidian';
+import { PluginSettingTab, Setting, Notice, TFolder } from 'obsidian';
 import { PriorityLevelType } from '../../core/domain/value-objects/priority-level';
 import type { AIProviderType, AISettings } from '../../core/domain/interfaces/llm-provider';
 import { AI_PROVIDERS, getModelsByProvider } from '../../core/domain/constants/model-configs';
@@ -10,6 +10,8 @@ export interface ReadingQueueSettings {
   staleDaysThreshold: number;
   showCompletedItems: boolean;
   showAbandonedItems: boolean;
+  // Note creation settings
+  defaultNoteFolder: string;
   // AI Settings
   ai: AISettings;
 }
@@ -36,6 +38,7 @@ export const DEFAULT_SETTINGS: ReadingQueueSettings = {
   staleDaysThreshold: 30,
   showCompletedItems: false,
   showAbandonedItems: false,
+  defaultNoteFolder: '',
   ai: DEFAULT_AI_SETTINGS,
 };
 
@@ -101,6 +104,32 @@ export class ReadingQueueSettingTab extends PluginSettingTab {
         text.inputEl.type = 'number';
         text.inputEl.min = '1';
         text.inputEl.style.width = '80px';
+      });
+
+    // Note folder setting
+    new Setting(containerEl)
+      .setName('노트 생성 폴더')
+      .setDesc('영구 노트가 생성될 폴더 경로 (비워두면 볼트 루트)')
+      .addDropdown((dropdown) => {
+        // Add empty option for vault root
+        dropdown.addOption('', '/ (볼트 루트)');
+
+        // Get all folders in vault
+        const folders = this.plugin.app.vault.getAllLoadedFiles()
+          .filter((f): f is TFolder => f instanceof TFolder)
+          .map(f => f.path)
+          .sort();
+
+        for (const folder of folders) {
+          dropdown.addOption(folder, folder);
+        }
+
+        dropdown
+          .setValue(this.plugin.settings.defaultNoteFolder)
+          .onChange(async (value) => {
+            this.plugin.settings.defaultNoteFolder = value;
+            await this.plugin.saveSettings();
+          });
       });
   }
 
@@ -315,7 +344,7 @@ export class ReadingQueueSettingTab extends PluginSettingTab {
 
     const aboutEl = containerEl.createDiv();
     aboutEl.createEl('p', {
-      text: 'Reading Queue Manager v0.2.0',
+      text: 'Reading Queue Manager v0.2.3',
     });
     aboutEl.createEl('p', {
       text: '읽기 자료를 체계적으로 관리하고 AI 기반 분석을 지원하는 PKM 도구입니다.',

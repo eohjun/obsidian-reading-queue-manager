@@ -29,36 +29,38 @@ export interface SuggestNoteTopicsOutput {
   error?: string;
 }
 
-const NOTE_TOPIC_PROMPT = `You are a PKM (Personal Knowledge Management) expert helping to identify permanent note topics from reading content.
+const NOTE_TOPIC_PROMPT = `당신은 PKM(개인 지식 관리) 전문가로서, 읽기 자료에서 영구 노트로 작성할 주제를 추천합니다.
 
-Reading content:
+읽기 자료:
 ---
-Title: {title}
+제목: {title}
 URL: {url}
 
-Summary: {summary}
+요약: {summary}
 
-Key Insights:
+핵심 인사이트:
 {insights}
 
-User Notes:
+사용자 메모:
 {userNotes}
 ---
 
-Based on this content, suggest 2-4 distinct permanent note topics. Each topic should:
-1. Be a single, atomic concept that can stand alone
-2. Be generalizable beyond this specific source
-3. Connect to broader knowledge domains
-4. Be actionable or contain wisdom that can be applied
+위 내용을 바탕으로 2-4개의 영구 노트 주제를 추천해주세요. 각 주제는:
+1. 독립적으로 존재할 수 있는 단일 개념이어야 합니다
+2. 이 특정 출처를 넘어 일반화될 수 있어야 합니다
+3. 더 넓은 지식 영역과 연결될 수 있어야 합니다
+4. 실행 가능하거나 적용할 수 있는 통찰을 담아야 합니다
 
-Respond ONLY with valid JSON (no markdown):
+**반드시 한국어로 작성하세요.**
+
+유효한 JSON으로만 응답하세요 (마크다운 없이):
 {
   "topics": [
     {
-      "title": "Clear, specific topic title",
-      "description": "2-3 sentences explaining the core idea",
-      "keyPoints": ["point 1", "point 2", "point 3"],
-      "suggestedTags": ["tag1", "tag2"]
+      "title": "명확하고 구체적인 주제 제목",
+      "description": "핵심 아이디어를 설명하는 2-3문장",
+      "keyPoints": ["포인트 1", "포인트 2", "포인트 3"],
+      "suggestedTags": ["태그1", "태그2"]
     }
   ]
 }`;
