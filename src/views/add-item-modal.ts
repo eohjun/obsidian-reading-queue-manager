@@ -228,6 +228,7 @@ export class AddItemModal extends Modal {
           estimatedMinutes: this.estimatedMinutes,
           tags,
           notes: this.notes.trim() || undefined,
+          analysis: this.analysis,
         });
 
         if (result.success) {
@@ -247,6 +248,7 @@ export class AddItemModal extends Modal {
           estimatedMinutes: this.estimatedMinutes,
           tags,
           notes: this.notes.trim() || undefined,
+          analysis: this.analysis,
         });
 
         if (result.success) {

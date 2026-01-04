@@ -1,4 +1,5 @@
 import { ReadingItem, ReadingSourceType } from '../../domain/entities/reading-item';
+import { ContentAnalysis } from '../../domain/entities/content-analysis';
 import { PriorityLevelType } from '../../domain/value-objects/priority-level';
 import { IReadingQueueRepository } from '../../domain/interfaces/reading-queue-repository.interface';
 
@@ -10,6 +11,7 @@ export interface AddReadingItemInput {
   estimatedMinutes?: number;
   tags?: string[];
   notes?: string;
+  analysis?: ContentAnalysis;
 }
 
 export interface AddReadingItemOutput {
@@ -37,6 +39,7 @@ export class AddReadingItemUseCase {
         estimatedMinutes: input.estimatedMinutes,
         tags: input.tags || [],
         notes: input.notes,
+        analysis: input.analysis,
       });
 
       // 저장

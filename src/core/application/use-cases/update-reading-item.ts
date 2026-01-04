@@ -1,4 +1,5 @@
 import { ReadingItem } from '../../domain/entities/reading-item';
+import { ContentAnalysis } from '../../domain/entities/content-analysis';
 import { PriorityLevel, PriorityLevelType } from '../../domain/value-objects/priority-level';
 import { IReadingQueueRepository } from '../../domain/interfaces/reading-queue-repository.interface';
 
@@ -11,6 +12,7 @@ export interface UpdateReadingItemInput {
   tags?: string[];
   notes?: string;
   progress?: number;
+  analysis?: ContentAnalysis;
 }
 
 export interface UpdateReadingItemOutput {
@@ -57,6 +59,10 @@ export class UpdateReadingItemUseCase {
 
       if (input.progress !== undefined) {
         item.updateProgress(input.progress);
+      }
+
+      if (input.analysis !== undefined) {
+        item.setAnalysis(input.analysis);
       }
 
       // 저장
