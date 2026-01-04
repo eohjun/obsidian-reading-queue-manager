@@ -51,8 +51,8 @@ export default class ReadingQueuePlugin extends Plugin {
       (leaf) => new ReadingQueueView(leaf, this)
     );
 
-    // Ribbon 아이콘
-    this.addRibbonIcon('book-open', 'Reading Queue', () => {
+    // Ribbon 아이콘 (list-checks: 체크리스트 아이콘으로 다른 플러그인과 구분)
+    this.addRibbonIcon('list-checks', 'Reading Queue', () => {
       this.activateView();
     });
 
@@ -176,7 +176,8 @@ export default class ReadingQueuePlugin extends Plugin {
   }
 
   showAddItemModal(): void {
-    const modal = new AddItemModal(this, () => {
+    const modal = new AddItemModal(this, async () => {
+      await this.activateView(); // 아이템 추가 후 자동으로 Reading Queue 패널 열기
       this.refreshView();
     });
     modal.open();

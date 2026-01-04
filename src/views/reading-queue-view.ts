@@ -35,7 +35,7 @@ export class ReadingQueueView extends ItemView {
   }
 
   getIcon(): string {
-    return 'book-open';
+    return 'list-checks';
   }
 
   async onOpen(): Promise<void> {
