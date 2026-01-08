@@ -76,6 +76,13 @@ export class ClaudeProvider extends BaseProvider {
     }
 
     try {
+      console.log(`[ClaudeProvider] Making API request:`, {
+        model: requestBody.model,
+        messageCount: requestBody.messages.length,
+        hasSystemPrompt: !!requestBody.system,
+        maxTokens: requestBody.max_tokens,
+      });
+
       const response = await this.makeRequest<ClaudeResponse>({
         url: `${this.config.endpoint}/messages`,
         method: 'POST',
@@ -85,6 +92,13 @@ export class ClaudeProvider extends BaseProvider {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(requestBody),
+      });
+
+      console.log(`[ClaudeProvider] Raw API response:`, {
+        hasContent: !!response.content,
+        contentBlockCount: response.content?.length || 0,
+        usage: response.usage,
+        error: response.error,
       });
 
       if (response.error) {

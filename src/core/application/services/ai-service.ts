@@ -170,6 +170,16 @@ export class AIService {
     const provider = this.providers.get(providerType);
     const apiKey = this.settings.apiKeys[providerType];
 
+    console.log(`[AIService] generateForFeature called:`, {
+      feature,
+      providerType,
+      model,
+      hasProvider: !!provider,
+      hasApiKey: !!apiKey,
+      apiKeyLength: apiKey?.length || 0,
+      registeredProviders: Array.from(this.providers.keys()),
+    });
+
     if (!provider) {
       return { success: false, content: '', error: `Provider ${providerType} not available` };
     }
@@ -193,7 +203,15 @@ export class AIService {
       ...options,
     };
 
-    return provider.generateText(messages, apiKey, mergedOptions);
+    const response = await provider.generateText(messages, apiKey, mergedOptions);
+    console.log(`[AIService] Provider response:`, {
+      success: response.success,
+      contentLength: response.content?.length || 0,
+      contentPreview: response.content?.substring(0, 200) || '(empty)',
+      error: response.error,
+      tokensUsed: response.tokensUsed,
+    });
+    return response;
   }
 
   /**
