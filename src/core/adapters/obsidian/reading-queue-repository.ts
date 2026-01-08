@@ -11,6 +11,9 @@ import {
 interface StoredData {
   items: ReadingItemData[];
   version: string;
+  // Note: Other plugin data (settings) is stored alongside these fields
+  // The persist() method preserves existing data to avoid overwriting settings
+  [key: string]: unknown;
 }
 
 export class ObsidianReadingQueueRepository implements IReadingQueueRepository {
@@ -39,7 +42,11 @@ export class ObsidianReadingQueueRepository implements IReadingQueueRepository {
   }
 
   private async persist(): Promise<void> {
+    // Load existing data first to preserve settings and other plugin data
+    const existingData = await this.plugin.loadData() as StoredData | null;
+
     const data: StoredData = {
+      ...existingData, // Preserve existing data (including settings)
       items: Array.from(this.items.values()).map(item => item.toData()),
       version: '0.1.0',
     };
