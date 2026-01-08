@@ -3,7 +3,7 @@
  * Displays reading insights and suggests permanent note topics
  */
 
-import { Modal, Notice, setIcon } from 'obsidian';
+import { Modal, Notice, setIcon, normalizePath, TFolder } from 'obsidian';
 import { ReadingItem } from '../core/domain/entities/reading-item';
 import { SuggestNoteTopicsUseCase, NoteTopic } from '../core/application/use-cases/suggest-note-topics';
 import type ReadingQueuePlugin from '../main';
@@ -228,27 +228,25 @@ export class InsightsModal extends Modal {
     // Generate note content
     const content = this.generateNoteContent(topic);
 
-    // Create file with folder support
+    // Create file with folder support (cross-platform safe)
     const fileName = `${topic.title.replace(/[\\/:*?"<>|]/g, '')}.md`;
     const folderPath = this.plugin.settings.defaultNoteFolder;
-    const filePath = folderPath ? `${folderPath}/${fileName}` : fileName;
+    const filePath = normalizePath(folderPath ? `${folderPath}/${fileName}` : fileName);
 
     try {
-      // Ensure folder exists if specified
+      // Ensure folder exists if specified (cross-platform safe)
       if (folderPath) {
-        const folderExists = this.app.vault.getAbstractFileByPath(folderPath);
-        if (!folderExists) {
-          await this.app.vault.createFolder(folderPath);
-        }
+        await this.ensureFolder(normalizePath(folderPath));
       }
 
-      const existingFile = this.app.vault.getAbstractFileByPath(filePath);
-      if (existingFile) {
+      // Check if file exists (with adapter fallback for sync scenarios)
+      const fileExists = await this.fileExists(filePath);
+      if (fileExists) {
         new Notice('같은 이름의 노트가 이미 존재합니다.');
         return;
       }
 
-      await this.app.vault.create(filePath, content);
+      await this.createFile(filePath, content);
 
       // Link to reading item
       this.item.addLinkedNote(filePath);
@@ -257,13 +255,65 @@ export class InsightsModal extends Modal {
       new Notice(`노트가 생성되었습니다: ${fileName}`);
 
       // Open the created note
-      const file = this.app.vault.getAbstractFileByPath(filePath);
-      if (file) {
-        await this.app.workspace.openLinkText(filePath, '', true);
-      }
+      await this.app.workspace.openLinkText(filePath, '', true);
     } catch (error) {
       new Notice('노트 생성에 실패했습니다.');
       console.error('Note creation error:', error);
+    }
+  }
+
+  /**
+   * Ensure folder exists with cross-platform compatibility
+   */
+  private async ensureFolder(path: string): Promise<void> {
+    const normalizedPath = normalizePath(path);
+    const existing = this.app.vault.getAbstractFileByPath(normalizedPath);
+
+    if (existing instanceof TFolder) {
+      return;
+    }
+
+    try {
+      await this.app.vault.createFolder(normalizedPath);
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : String(error);
+      if (msg.toLowerCase().includes('already exists')) {
+        return;
+      }
+      throw error;
+    }
+  }
+
+  /**
+   * Check if file exists with adapter fallback
+   */
+  private async fileExists(path: string): Promise<boolean> {
+    const normalizedPath = normalizePath(path);
+    const file = this.app.vault.getAbstractFileByPath(normalizedPath);
+    if (file) return true;
+
+    try {
+      return await this.app.vault.adapter.exists(normalizedPath);
+    } catch {
+      return false;
+    }
+  }
+
+  /**
+   * Create file with cross-platform compatibility
+   */
+  private async createFile(path: string, content: string): Promise<void> {
+    const normalizedPath = normalizePath(path);
+
+    try {
+      await this.app.vault.create(normalizedPath, content);
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : String(error);
+      if (msg.toLowerCase().includes('already exists')) {
+        await this.app.vault.adapter.write(normalizedPath, content);
+        return;
+      }
+      throw error;
     }
   }
 
