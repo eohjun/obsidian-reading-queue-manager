@@ -344,7 +344,7 @@ export class ReadingQueueSettingTab extends PluginSettingTab {
 
     const aboutEl = containerEl.createDiv();
     aboutEl.createEl('p', {
-      text: 'Reading Queue Manager v0.2.6',
+      text: `Reading Queue Manager v${this.plugin.manifest.version}`,
     });
     aboutEl.createEl('p', {
       text: '읽기 자료를 체계적으로 관리하고 AI 기반 분석을 지원하는 PKM 도구입니다.',
