@@ -115,7 +115,7 @@ export class SuggestNoteTopicsUseCase {
       }
 
       // Parse response
-      const topics = this.parseTopicsResponse(response.content);
+      const parseResult = this.parseTopicsResponse(response.content);
 
       // Track cost
       if (response.tokensUsed) {
@@ -125,9 +125,25 @@ export class SuggestNoteTopicsUseCase {
         this.costTracker.trackUsage(provider, model, inputTokens, outputTokens, 'insight-extraction');
       }
 
+      if (parseResult.error) {
+        return {
+          success: false,
+          topics: [],
+          error: parseResult.error,
+        };
+      }
+
+      if (parseResult.topics.length === 0) {
+        return {
+          success: false,
+          topics: [],
+          error: '추천할 노트 주제를 찾지 못했습니다. 분석 결과가 있는지 확인해주세요.',
+        };
+      }
+
       return {
         success: true,
-        topics,
+        topics: parseResult.topics,
       };
     } catch (error) {
       return {
@@ -138,29 +154,41 @@ export class SuggestNoteTopicsUseCase {
     }
   }
 
-  private parseTopicsResponse(response: string): NoteTopic[] {
+  private parseTopicsResponse(response: string): { topics: NoteTopic[]; error?: string } {
     try {
       let cleaned = response.trim();
+
+      // Log raw response for debugging
+      console.log('[SuggestNoteTopics] Raw AI response:', cleaned.substring(0, 500));
+
       if (cleaned.startsWith('```')) {
         cleaned = cleaned.replace(/```json?\n?/g, '').replace(/```$/g, '');
       }
       cleaned = cleaned.trim();
 
+      if (!cleaned) {
+        return { topics: [], error: 'AI 응답이 비어있습니다.' };
+      }
+
       const parsed = JSON.parse(cleaned);
       const topics = parsed.topics || parsed;
 
       if (!Array.isArray(topics)) {
-        return [];
+        return { topics: [], error: 'AI 응답 형식이 올바르지 않습니다 (배열이 아님).' };
       }
 
-      return topics.map((t: Record<string, unknown>) => ({
+      const validTopics = topics.map((t: Record<string, unknown>) => ({
         title: String(t.title || ''),
         description: String(t.description || ''),
         keyPoints: Array.isArray(t.keyPoints) ? t.keyPoints.map(String) : [],
         suggestedTags: Array.isArray(t.suggestedTags) ? t.suggestedTags.map(String) : [],
       })).filter(t => t.title.length > 0);
-    } catch {
-      return [];
+
+      return { topics: validTopics };
+    } catch (e) {
+      const errorMsg = e instanceof Error ? e.message : 'Unknown parse error';
+      console.error('[SuggestNoteTopics] Parse error:', errorMsg, '\nResponse:', response.substring(0, 500));
+      return { topics: [], error: `AI 응답 파싱 실패: ${errorMsg}` };
     }
   }
 }
