@@ -102,7 +102,7 @@ export class SuggestNoteTopicsUseCase {
         'insight-extraction',
         prompt,
         undefined,
-        { temperature: 0.5, maxTokens: 1024 },
+        { temperature: 0.5, maxTokens: 8192 },  // Reasoning models (GPT-5.x, o1, o3) need more tokens for internal reasoning
         currentSpend
       );
 

@@ -108,7 +108,7 @@ export class AnalyzeUrlContentUseCase {
         'url-analysis',
         prompt,
         undefined,
-        { temperature: 0.3, maxTokens: 1024 },
+        { temperature: 0.3, maxTokens: 8192 },  // Reasoning models need more tokens
         currentSpend
       );
 
