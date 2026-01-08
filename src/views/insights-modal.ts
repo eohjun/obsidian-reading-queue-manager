@@ -6,6 +6,7 @@
 import { Modal, Notice, setIcon, normalizePath, TFolder } from 'obsidian';
 import { ReadingItem } from '../core/domain/entities/reading-item';
 import { SuggestNoteTopicsUseCase, NoteTopic } from '../core/application/use-cases/suggest-note-topics';
+import type { SuggestedNoteTopic } from '../core/domain/entities/content-analysis';
 import type ReadingQueuePlugin from '../main';
 
 export class InsightsModal extends Modal {
@@ -24,6 +25,11 @@ export class InsightsModal extends Modal {
     const { contentEl } = this;
     contentEl.empty();
     contentEl.addClass('reading-queue-insights-modal');
+
+    // Load existing note topics from analysis (persistence)
+    if (this.item.analysis?.hasSuggestedNoteTopics()) {
+      this.noteTopics = this.item.analysis.suggestedNoteTopics as NoteTopic[];
+    }
 
     // Header
     contentEl.createEl('h2', { text: '💡 인사이트 & 노트 추천' });
@@ -172,6 +178,13 @@ export class InsightsModal extends Modal {
 
       if (result.success && result.topics.length > 0) {
         this.noteTopics = result.topics;
+
+        // Persist topics to analysis
+        if (this.item.analysis) {
+          this.item.analysis.setSuggestedNoteTopics(result.topics as SuggestedNoteTopic[]);
+          await this.plugin.repository.save(this.item);
+        }
+
         this.renderNoteTopics(container);
         new Notice(`${result.topics.length}개의 노트 주제가 추천되었습니다.`);
       } else {
@@ -189,6 +202,29 @@ export class InsightsModal extends Modal {
 
   private renderNoteTopics(container: HTMLElement): void {
     container.empty();
+
+    // Combined note creation button
+    const actionRow = container.createDiv({ cls: 'note-topics-actions' });
+    actionRow.style.marginBottom = '16px';
+    actionRow.style.display = 'flex';
+    actionRow.style.gap = '10px';
+    actionRow.style.flexWrap = 'wrap';
+
+    const createAllBtn = actionRow.createEl('button', {
+      text: '📄 전체 노트 생성',
+      cls: 'mod-cta',
+    });
+    createAllBtn.addEventListener('click', () => this.createCombinedNote());
+
+    const regenerateBtn = actionRow.createEl('button', {
+      text: '🔄 다시 추천받기',
+    });
+    regenerateBtn.addEventListener('click', async () => {
+      this.noteTopics = [];
+      this.isLoadingTopics = false;
+      this.renderGenerateTopicsButton(container);
+      await this.generateNoteTopics(container);
+    });
 
     for (const topic of this.noteTopics) {
       const topicCard = container.createDiv({ cls: 'note-topic-card' });
@@ -317,8 +353,123 @@ export class InsightsModal extends Modal {
     }
   }
 
+  /**
+   * Create a combined note with all insights and note topics
+   */
+  private async createCombinedNote(): Promise<void> {
+    const analysis = this.item.analysis;
+    if (!analysis) {
+      new Notice('분석 결과가 없습니다.');
+      return;
+    }
+
+    // Generate combined note content
+    const content = this.generateCombinedNoteContent();
+
+    // Create file
+    const safeTitle = this.item.title.replace(/[\\/:*?"<>|]/g, '').substring(0, 50);
+    const fileName = `${safeTitle} - 종합 인사이트.md`;
+    const folderPath = this.plugin.settings.defaultNoteFolder;
+    const filePath = normalizePath(folderPath ? `${folderPath}/${fileName}` : fileName);
+
+    try {
+      if (folderPath) {
+        await this.ensureFolder(normalizePath(folderPath));
+      }
+
+      const fileExists = await this.fileExists(filePath);
+      if (fileExists) {
+        new Notice('같은 이름의 노트가 이미 존재합니다.');
+        return;
+      }
+
+      await this.createFile(filePath, content);
+
+      // Link to reading item
+      this.item.addLinkedNote(filePath);
+      await this.plugin.repository.save(this.item);
+
+      new Notice(`종합 노트가 생성되었습니다: ${fileName}`);
+
+      // Open the created note
+      await this.app.workspace.openLinkText(filePath, '', true);
+    } catch (error) {
+      new Notice('종합 노트 생성에 실패했습니다.');
+      console.error('Combined note creation error:', error);
+    }
+  }
+
+  /**
+   * Generate combined note content with all insights and topics
+   */
+  private generateCombinedNoteContent(): string {
+    const analysis = this.item.analysis!;
+    const sourceLink = this.item.url ? `[${this.item.title}](${this.item.url})` : this.item.title;
+
+    // Collect all tags
+    const allTags = new Set<string>();
+    for (const tag of analysis.suggestedTags) {
+      allTags.add(tag);
+    }
+    for (const topic of this.noteTopics) {
+      for (const tag of topic.suggestedTags) {
+        allTags.add(tag);
+      }
+    }
+    const tagsArray = Array.from(allTags);
+
+    // Key insights
+    const insightsList = analysis.keyInsights.map(i => `- ${i}`).join('\n');
+
+    // Note topics section
+    let topicsSection = '';
+    if (this.noteTopics.length > 0) {
+      topicsSection = '\n## 📝 영구 노트 주제\n\n';
+      for (const topic of this.noteTopics) {
+        topicsSection += `### ${topic.title}\n\n`;
+        topicsSection += `${topic.description}\n\n`;
+        if (topic.keyPoints.length > 0) {
+          topicsSection += '**핵심 포인트:**\n';
+          topicsSection += topic.keyPoints.map(p => `- ${p}`).join('\n');
+          topicsSection += '\n\n';
+        }
+      }
+    }
+
+    return `---
+tags: [${tagsArray.join(', ')}]
+source: "[[Reading Queue]]"
+created: ${new Date().toISOString().split('T')[0]}
+type: comprehensive-insight
+---
+
+# ${this.item.title} - 종합 인사이트
+
+## 📌 출처
+
+- ${sourceLink}
+
+## 📝 요약
+
+${analysis.summary}
+
+## 🔑 핵심 인사이트
+
+${insightsList}
+${topicsSection}
+## 💭 연결된 생각
+
+
+
+## 📋 메타데이터
+
+- 분석 일시: ${analysis.analyzedAt.toLocaleString()}
+- 모델: ${analysis.model}
+${analysis.estimatedReadingTime ? `- 예상 읽기 시간: ${analysis.getReadingTimeDisplay()}` : ''}
+`;
+  }
+
   private generateNoteContent(topic: NoteTopic): string {
-    const tags = topic.suggestedTags.map(t => `#${t}`).join(' ');
     const sourceLink = this.item.url ? `[${this.item.title}](${this.item.url})` : this.item.title;
 
     const keyPointsList = topic.keyPoints.map(p => `- ${p}`).join('\n');

@@ -5,6 +5,13 @@
 
 import type { PriorityLevelType } from '../value-objects/priority-level';
 
+export interface SuggestedNoteTopic {
+  title: string;
+  description: string;
+  keyPoints: string[];
+  suggestedTags: string[];
+}
+
 export interface ContentAnalysisProps {
   id: string;
   itemId: string;
@@ -19,6 +26,7 @@ export interface ContentAnalysisProps {
   provider: string;
   model: string;
   tokensUsed?: number;
+  suggestedNoteTopics?: SuggestedNoteTopic[];
 }
 
 export interface ContentAnalysisData {
@@ -35,6 +43,7 @@ export interface ContentAnalysisData {
   provider: string;
   model: string;
   tokensUsed?: number;
+  suggestedNoteTopics?: SuggestedNoteTopic[];
 }
 
 export class ContentAnalysis {
@@ -51,6 +60,7 @@ export class ContentAnalysis {
   private readonly _provider: string;
   private readonly _model: string;
   private readonly _tokensUsed?: number;
+  private _suggestedNoteTopics: SuggestedNoteTopic[];
 
   private constructor(props: ContentAnalysisProps) {
     this._id = props.id;
@@ -66,6 +76,7 @@ export class ContentAnalysis {
     this._provider = props.provider;
     this._model = props.model;
     this._tokensUsed = props.tokensUsed;
+    this._suggestedNoteTopics = props.suggestedNoteTopics ? [...props.suggestedNoteTopics] : [];
   }
 
   static create(props: Omit<ContentAnalysisProps, 'id' | 'analyzedAt'>): ContentAnalysis {
@@ -91,6 +102,7 @@ export class ContentAnalysis {
       provider: data.provider,
       model: data.model,
       tokensUsed: data.tokensUsed,
+      suggestedNoteTopics: data.suggestedNoteTopics,
     });
   }
 
@@ -108,6 +120,16 @@ export class ContentAnalysis {
   get provider(): string { return this._provider; }
   get model(): string { return this._model; }
   get tokensUsed(): number | undefined { return this._tokensUsed; }
+  get suggestedNoteTopics(): SuggestedNoteTopic[] { return [...this._suggestedNoteTopics]; }
+
+  // Setters
+  setSuggestedNoteTopics(topics: SuggestedNoteTopic[]): void {
+    this._suggestedNoteTopics = [...topics];
+  }
+
+  hasSuggestedNoteTopics(): boolean {
+    return this._suggestedNoteTopics.length > 0;
+  }
 
   // Serialization
   toData(): ContentAnalysisData {
@@ -125,6 +147,7 @@ export class ContentAnalysis {
       provider: this._provider,
       model: this._model,
       tokensUsed: this._tokensUsed,
+      suggestedNoteTopics: this._suggestedNoteTopics.length > 0 ? [...this._suggestedNoteTopics] : undefined,
     };
   }
 
