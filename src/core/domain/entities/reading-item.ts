@@ -164,7 +164,7 @@ export class ReadingItem {
     }
     this._progress = progress;
 
-    // 자동 상태 전환
+    // Auto status transition
     if (progress > 0 && this._status.isQueue()) {
       this.startReading();
     }
@@ -219,7 +219,7 @@ export class ReadingItem {
   setAnalysis(analysis: ContentAnalysis): void {
     this._analysis = analysis;
 
-    // 분석 결과에서 예상 읽기 시간 업데이트 (없는 경우에만)
+    // Update estimated reading time from analysis (only if not set)
     if (!this._estimatedMinutes && analysis.estimatedReadingTime) {
       this._estimatedMinutes = analysis.estimatedReadingTime;
     }
@@ -266,21 +266,21 @@ export class ReadingItem {
     return this._linkedNotes.length > 0;
   }
 
-  // 시간 예산 내 완료 가능 여부
+  // Check if item can be completed within time budget
   fitsTimeBudget(budgetMinutes: number): boolean {
-    if (!this._estimatedMinutes) return true; // 시간 미지정은 통과
+    if (!this._estimatedMinutes) return true; // No time estimate means pass
     const remainingMinutes = this._estimatedMinutes * (1 - this._progress / 100);
     return remainingMinutes <= budgetMinutes;
   }
 
-  // 얼마나 오래 큐에 있었는지 (일 단위)
+  // Get days in queue
   getDaysInQueue(): number {
     const now = new Date();
     const diffMs = now.getTime() - this._addedAt.getTime();
     return Math.floor(diffMs / (1000 * 60 * 60 * 24));
   }
 
-  // 오래된 아이템 여부
+  // Check if item is stale
   isStale(daysThreshold: number = 30): boolean {
     return this._status.isActive() && this.getDaysInQueue() >= daysThreshold;
   }

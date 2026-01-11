@@ -29,10 +29,10 @@ export class UpdateReadingItemUseCase {
       const item = await this.repository.findById(input.itemId);
 
       if (!item) {
-        return { success: false, error: '아이템을 찾을 수 없습니다.' };
+        return { success: false, error: 'Item not found.' };
       }
 
-      // 필드 업데이트
+      // Update fields
       if (input.title !== undefined) {
         item.updateTitle(input.title);
       }
@@ -65,14 +65,14 @@ export class UpdateReadingItemUseCase {
         item.setAnalysis(input.analysis);
       }
 
-      // 저장
+      // Save
       const savedItem = await this.repository.save(item);
 
       return { success: true, item: savedItem };
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : '아이템 수정 중 오류가 발생했습니다.',
+        error: error instanceof Error ? error.message : 'Error updating item.',
       };
     }
   }

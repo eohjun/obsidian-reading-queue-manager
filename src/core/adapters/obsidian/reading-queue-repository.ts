@@ -85,7 +85,7 @@ export class ObsidianReadingQueueRepository implements IReadingQueueRepository {
     await this.load();
 
     return Array.from(this.items.values()).filter(item => {
-      // 상태 필터
+      // Status filter
       if (filter.status) {
         const statuses = Array.isArray(filter.status) ? filter.status : [filter.status];
         if (!statuses.includes(item.status.getValue())) {
@@ -93,7 +93,7 @@ export class ObsidianReadingQueueRepository implements IReadingQueueRepository {
         }
       }
 
-      // 우선순위 필터
+      // Priority filter
       if (filter.priority) {
         const priorities = Array.isArray(filter.priority) ? filter.priority : [filter.priority];
         if (!priorities.includes(item.priority.getValue())) {
@@ -101,7 +101,7 @@ export class ObsidianReadingQueueRepository implements IReadingQueueRepository {
         }
       }
 
-      // 태그 필터 (AND 조건)
+      // Tag filter (AND condition)
       if (filter.tags && filter.tags.length > 0) {
         const hasAllTags = filter.tags.every(tag => item.hasTag(tag));
         if (!hasAllTags) {
@@ -109,14 +109,14 @@ export class ObsidianReadingQueueRepository implements IReadingQueueRepository {
         }
       }
 
-      // 시간 예산 필터
+      // Time budget filter
       if (filter.maxMinutes !== undefined) {
         if (!item.fitsTimeBudget(filter.maxMinutes)) {
           return false;
         }
       }
 
-      // stale 아이템 포함 여부
+      // Include stale items flag
       if (!filter.includeStale && item.isStale()) {
         return false;
       }

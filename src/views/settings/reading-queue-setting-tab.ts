@@ -26,7 +26,7 @@ export const DEFAULT_AI_SETTINGS: AISettings = {
     grok: 'grok-4-1-fast-non-reasoning',
   },
   featureModels: {},
-  defaultLanguage: 'ko',
+  defaultLanguage: 'en',
   budgetLimit: 5.0,
   autoAnalyzeOnAdd: true,
   autoSuggestTags: true,
@@ -54,7 +54,7 @@ export class ReadingQueueSettingTab extends PluginSettingTab {
     const { containerEl } = this;
     containerEl.empty();
 
-    containerEl.createEl('h2', { text: 'Reading Queue Manager 설정' });
+    containerEl.createEl('h2', { text: 'Reading Queue Manager Settings' });
 
     // General Section
     this.displayGeneralSection(containerEl);
@@ -70,16 +70,16 @@ export class ReadingQueueSettingTab extends PluginSettingTab {
   }
 
   private displayGeneralSection(containerEl: HTMLElement): void {
-    containerEl.createEl('h3', { text: '일반' });
+    containerEl.createEl('h3', { text: 'General' });
 
     new Setting(containerEl)
-      .setName('기본 우선순위')
-      .setDesc('새 아이템 추가 시 기본 우선순위')
+      .setName('Default Priority')
+      .setDesc('Default priority when adding new items')
       .addDropdown((dropdown) => {
         dropdown
-          .addOption(PriorityLevelType.HIGH, '높음')
-          .addOption(PriorityLevelType.MEDIUM, '보통')
-          .addOption(PriorityLevelType.LOW, '낮음')
+          .addOption(PriorityLevelType.HIGH, 'High')
+          .addOption(PriorityLevelType.MEDIUM, 'Medium')
+          .addOption(PriorityLevelType.LOW, 'Low')
           .setValue(this.plugin.settings.defaultPriority)
           .onChange(async (value) => {
             this.plugin.settings.defaultPriority = value as PriorityLevelType;
@@ -88,8 +88,8 @@ export class ReadingQueueSettingTab extends PluginSettingTab {
       });
 
     new Setting(containerEl)
-      .setName('오래된 아이템 기준 (일)')
-      .setDesc('이 기간 동안 큐에 있는 아이템을 "오래된" 것으로 표시')
+      .setName('Stale Item Threshold (days)')
+      .setDesc('Mark items in queue for this many days as "stale"')
       .addText((text) => {
         text
           .setPlaceholder('30')
@@ -108,11 +108,11 @@ export class ReadingQueueSettingTab extends PluginSettingTab {
 
     // Note folder setting
     new Setting(containerEl)
-      .setName('노트 생성 폴더')
-      .setDesc('영구 노트가 생성될 폴더 경로 (비워두면 볼트 루트)')
+      .setName('Note Creation Folder')
+      .setDesc('Folder path for permanent notes (leave empty for vault root)')
       .addDropdown((dropdown) => {
         // Add empty option for vault root
-        dropdown.addOption('', '/ (볼트 루트)');
+        dropdown.addOption('', '/ (Vault Root)');
 
         // Get all folders in vault
         const folders = this.plugin.app.vault.getAllLoadedFiles()
@@ -134,11 +134,11 @@ export class ReadingQueueSettingTab extends PluginSettingTab {
   }
 
   private displayDisplaySection(containerEl: HTMLElement): void {
-    containerEl.createEl('h3', { text: '표시' });
+    containerEl.createEl('h3', { text: 'Display' });
 
     new Setting(containerEl)
-      .setName('완료된 아이템 표시')
-      .setDesc('기본 목록에 완료된 아이템도 표시')
+      .setName('Show Completed Items')
+      .setDesc('Show completed items in the default list')
       .addToggle((toggle) => {
         toggle
           .setValue(this.plugin.settings.showCompletedItems)
@@ -150,8 +150,8 @@ export class ReadingQueueSettingTab extends PluginSettingTab {
       });
 
     new Setting(containerEl)
-      .setName('포기한 아이템 표시')
-      .setDesc('기본 목록에 포기한 아이템도 표시')
+      .setName('Show Abandoned Items')
+      .setDesc('Show abandoned items in the default list')
       .addToggle((toggle) => {
         toggle
           .setValue(this.plugin.settings.showAbandonedItems)
@@ -164,14 +164,14 @@ export class ReadingQueueSettingTab extends PluginSettingTab {
   }
 
   private displayAISection(containerEl: HTMLElement): void {
-    containerEl.createEl('h3', { text: 'AI 설정' });
+    containerEl.createEl('h3', { text: 'AI Settings' });
 
     const aiSettings = this.plugin.settings.ai;
 
     // Provider Selection
     new Setting(containerEl)
-      .setName('AI 제공자')
-      .setDesc('사용할 LLM 제공자를 선택하세요')
+      .setName('AI Provider')
+      .setDesc('Select the LLM provider to use')
       .addDropdown((dropdown) => {
         for (const [id, config] of Object.entries(AI_PROVIDERS)) {
           dropdown.addOption(id, config.displayName);
@@ -191,7 +191,7 @@ export class ReadingQueueSettingTab extends PluginSettingTab {
 
     new Setting(containerEl)
       .setName(`${providerConfig.displayName} API Key`)
-      .setDesc(`${providerConfig.name}의 API 키를 입력하세요`)
+      .setDesc(`Enter your ${providerConfig.name} API key`)
       .addText((text) => {
         text
           .setPlaceholder('API Key')
@@ -205,26 +205,26 @@ export class ReadingQueueSettingTab extends PluginSettingTab {
       })
       .addButton((button) => {
         button
-          .setButtonText('테스트')
+          .setButtonText('Test')
           .onClick(async () => {
             const aiService = getAIService();
             if (!aiService) {
-              new Notice('AI 서비스가 초기화되지 않았습니다.');
+              new Notice('AI service not initialized.');
               return;
             }
-            button.setButtonText('테스트 중...');
+            button.setButtonText('Testing...');
             button.setDisabled(true);
             try {
               const isValid = await aiService.testCurrentApiKey();
               if (isValid) {
-                new Notice('API 키가 유효합니다!');
+                new Notice('API key is valid!');
               } else {
-                new Notice('API 키가 유효하지 않습니다.');
+                new Notice('API key is invalid.');
               }
             } catch (error) {
-              new Notice(`테스트 실패: ${error instanceof Error ? error.message : 'Unknown error'}`);
+              new Notice(`Test failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
             } finally {
-              button.setButtonText('테스트');
+              button.setButtonText('Test');
               button.setDisabled(false);
             }
           });
@@ -233,8 +233,8 @@ export class ReadingQueueSettingTab extends PluginSettingTab {
     // Model Selection for current provider
     const models = getModelsByProvider(currentProvider);
     new Setting(containerEl)
-      .setName('모델')
-      .setDesc('사용할 모델을 선택하세요')
+      .setName('Model')
+      .setDesc('Select the model to use')
       .addDropdown((dropdown) => {
         for (const model of models) {
           dropdown.addOption(model.id, `${model.displayName} (${model.tier})`);
@@ -248,11 +248,11 @@ export class ReadingQueueSettingTab extends PluginSettingTab {
       });
 
     // Auto Analysis Settings
-    containerEl.createEl('h4', { text: '자동 분석' });
+    containerEl.createEl('h4', { text: 'Auto Analysis' });
 
     new Setting(containerEl)
-      .setName('URL 추가 시 자동 분석')
-      .setDesc('새 URL을 추가할 때 자동으로 콘텐츠를 분석합니다')
+      .setName('Auto-analyze on URL Add')
+      .setDesc('Automatically analyze content when adding a new URL')
       .addToggle((toggle) => {
         toggle
           .setValue(aiSettings.autoAnalyzeOnAdd)
@@ -263,8 +263,8 @@ export class ReadingQueueSettingTab extends PluginSettingTab {
       });
 
     new Setting(containerEl)
-      .setName('태그 자동 추천')
-      .setDesc('분석 결과를 기반으로 태그를 자동으로 추천합니다')
+      .setName('Auto-suggest Tags')
+      .setDesc('Automatically suggest tags based on analysis results')
       .addToggle((toggle) => {
         toggle
           .setValue(aiSettings.autoSuggestTags)
@@ -275,8 +275,8 @@ export class ReadingQueueSettingTab extends PluginSettingTab {
       });
 
     new Setting(containerEl)
-      .setName('우선순위 자동 추천')
-      .setDesc('콘텐츠와 기존 노트를 기반으로 우선순위를 추천합니다')
+      .setName('Auto-suggest Priority')
+      .setDesc('Suggest priority based on content and existing notes')
       .addToggle((toggle) => {
         toggle
           .setValue(aiSettings.autoSuggestPriority)
@@ -287,11 +287,11 @@ export class ReadingQueueSettingTab extends PluginSettingTab {
       });
 
     // Budget Settings
-    containerEl.createEl('h4', { text: '예산 관리' });
+    containerEl.createEl('h4', { text: 'Budget Management' });
 
     new Setting(containerEl)
-      .setName('월간 예산 한도 ($)')
-      .setDesc('0으로 설정하면 한도가 없습니다')
+      .setName('Monthly Budget Limit ($)')
+      .setDesc('Set to 0 for no limit')
       .addText((text) => {
         text
           .setPlaceholder('5.00')
@@ -316,7 +316,7 @@ export class ReadingQueueSettingTab extends PluginSettingTab {
       const budgetLimit = aiSettings.budgetLimit;
       const costEl = containerEl.createDiv({ cls: 'rq-cost-display' });
       costEl.createEl('p', {
-        text: `이번 달 사용량: $${currentSpend.toFixed(4)}${budgetLimit ? ` / $${budgetLimit.toFixed(2)}` : ''}`,
+        text: `This month's usage: $${currentSpend.toFixed(4)}${budgetLimit ? ` / $${budgetLimit.toFixed(2)}` : ''}`,
       });
       if (budgetLimit) {
         const percentage = (currentSpend / budgetLimit) * 100;
@@ -340,14 +340,14 @@ export class ReadingQueueSettingTab extends PluginSettingTab {
   }
 
   private displayAboutSection(containerEl: HTMLElement): void {
-    containerEl.createEl('h3', { text: '정보' });
+    containerEl.createEl('h3', { text: 'About' });
 
     const aboutEl = containerEl.createDiv();
     aboutEl.createEl('p', {
       text: `Reading Queue Manager v${this.plugin.manifest.version}`,
     });
     aboutEl.createEl('p', {
-      text: '읽기 자료를 체계적으로 관리하고 AI 기반 분석을 지원하는 PKM 도구입니다.',
+      text: 'A PKM tool for systematically managing reading materials with AI-powered analysis.',
     });
   }
 }

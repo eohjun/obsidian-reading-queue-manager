@@ -21,57 +21,57 @@ export interface ReadingQueueFilter {
 
 export interface IReadingQueueRepository {
   /**
-   * ID로 아이템 조회
+   * Find item by ID
    */
   findById(id: string): Promise<ReadingItem | null>;
 
   /**
-   * 상태별 아이템 조회
+   * Find items by status
    */
   findByStatus(status: ReadingStatusType): Promise<ReadingItem[]>;
 
   /**
-   * 시간 예산 내 완료 가능한 아이템 조회
+   * Find items that can be completed within time budget
    */
   findByTimeBudget(maxMinutes: number): Promise<ReadingItem[]>;
 
   /**
-   * 오래된 아이템 조회
+   * Find stale items
    */
   findStaleItems(daysThreshold: number): Promise<ReadingItem[]>;
 
   /**
-   * 필터링된 아이템 조회
+   * Find items by filter
    */
   findByFilter(filter: ReadingQueueFilter): Promise<ReadingItem[]>;
 
   /**
-   * 모든 아이템 조회
+   * Get all items
    */
   getAll(): Promise<ReadingItem[]>;
 
   /**
-   * 활성 아이템 조회 (queue + reading)
+   * Get active items (queue + reading)
    */
   getActiveItems(): Promise<ReadingItem[]>;
 
   /**
-   * 아이템 저장 (생성 또는 업데이트)
+   * Save item (create or update)
    */
   save(item: ReadingItem): Promise<ReadingItem>;
 
   /**
-   * 아이템 삭제
+   * Delete item
    */
   delete(id: string): Promise<boolean>;
 
   /**
-   * 통계 조회
+   * Get statistics
    */
   getStats(): Promise<ReadingQueueStats>;
 
   /**
-   * 모든 태그 조회
+   * Get all tags
    */
   getAllTags(): Promise<string[]>;
 }

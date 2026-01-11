@@ -1,5 +1,5 @@
 /**
- * 읽기 우선순위를 나타내는 Value Object
+ * Value Object representing reading priority level
  */
 export enum PriorityLevelType {
   HIGH = 'high',
@@ -40,9 +40,9 @@ export class PriorityLevel {
 
   getDisplayText(): string {
     switch (this.value) {
-      case PriorityLevelType.HIGH: return '높음';
-      case PriorityLevelType.MEDIUM: return '보통';
-      case PriorityLevelType.LOW: return '낮음';
+      case PriorityLevelType.HIGH: return 'High';
+      case PriorityLevelType.MEDIUM: return 'Medium';
+      case PriorityLevelType.LOW: return 'Low';
     }
   }
 

@@ -163,10 +163,10 @@ export class ContentAnalysis {
   getReadingTimeDisplay(): string {
     if (!this._estimatedReadingTime) return '';
     if (this._estimatedReadingTime < 60) {
-      return `${this._estimatedReadingTime}분`;
+      return `${this._estimatedReadingTime} min`;
     }
     const hours = Math.floor(this._estimatedReadingTime / 60);
     const minutes = this._estimatedReadingTime % 60;
-    return minutes > 0 ? `${hours}시간 ${minutes}분` : `${hours}시간`;
+    return minutes > 0 ? `${hours}h ${minutes}min` : `${hours}h`;
   }
 }

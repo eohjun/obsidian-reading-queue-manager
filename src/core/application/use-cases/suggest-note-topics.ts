@@ -29,38 +29,38 @@ export interface SuggestNoteTopicsOutput {
   error?: string;
 }
 
-const NOTE_TOPIC_PROMPT = `당신은 PKM(개인 지식 관리) 전문가로서, 읽기 자료에서 영구 노트로 작성할 주제를 추천합니다.
+const NOTE_TOPIC_PROMPT = `You are a PKM (Personal Knowledge Management) expert. Suggest topics for permanent notes from reading materials.
 
-읽기 자료:
+Reading Material:
 ---
-제목: {title}
+Title: {title}
 URL: {url}
 
-요약: {summary}
+Summary: {summary}
 
-핵심 인사이트:
+Key Insights:
 {insights}
 
-사용자 메모:
+User Notes:
 {userNotes}
 ---
 
-위 내용을 바탕으로 2-4개의 영구 노트 주제를 추천해주세요. 각 주제는:
-1. 독립적으로 존재할 수 있는 단일 개념이어야 합니다
-2. 이 특정 출처를 넘어 일반화될 수 있어야 합니다
-3. 더 넓은 지식 영역과 연결될 수 있어야 합니다
-4. 실행 가능하거나 적용할 수 있는 통찰을 담아야 합니다
+Based on the above content, suggest 2-4 permanent note topics. Each topic should:
+1. Be a single concept that can stand on its own
+2. Be generalizable beyond this specific source
+3. Be connectable to broader areas of knowledge
+4. Contain actionable or applicable insights
 
-**반드시 한국어로 작성하세요.**
+**Write in English.**
 
-유효한 JSON으로만 응답하세요 (마크다운 없이):
+Respond with valid JSON only (no markdown):
 {
   "topics": [
     {
-      "title": "명확하고 구체적인 주제 제목",
-      "description": "핵심 아이디어를 설명하는 2-3문장",
-      "keyPoints": ["포인트 1", "포인트 2", "포인트 3"],
-      "suggestedTags": ["태그1", "태그2"]
+      "title": "Clear and specific topic title",
+      "description": "2-3 sentences explaining the core idea",
+      "keyPoints": ["Point 1", "Point 2", "Point 3"],
+      "suggestedTags": ["tag1", "tag2"]
     }
   ]
 }`;
@@ -137,7 +137,7 @@ export class SuggestNoteTopicsUseCase {
         return {
           success: false,
           topics: [],
-          error: '추천할 노트 주제를 찾지 못했습니다. 분석 결과가 있는지 확인해주세요.',
+          error: 'No note topics found. Please check if analysis results are available.',
         };
       }
 
@@ -167,14 +167,14 @@ export class SuggestNoteTopicsUseCase {
       cleaned = cleaned.trim();
 
       if (!cleaned) {
-        return { topics: [], error: 'AI 응답이 비어있습니다.' };
+        return { topics: [], error: 'AI response is empty.' };
       }
 
       const parsed = JSON.parse(cleaned);
       const topics = parsed.topics || parsed;
 
       if (!Array.isArray(topics)) {
-        return { topics: [], error: 'AI 응답 형식이 올바르지 않습니다 (배열이 아님).' };
+        return { topics: [], error: 'Invalid AI response format (not an array).' };
       }
 
       const validTopics = topics.map((t: Record<string, unknown>) => ({
@@ -188,7 +188,7 @@ export class SuggestNoteTopicsUseCase {
     } catch (e) {
       const errorMsg = e instanceof Error ? e.message : 'Unknown parse error';
       console.error('[SuggestNoteTopics] Parse error:', errorMsg, '\nResponse:', response.substring(0, 500));
-      return { topics: [], error: `AI 응답 파싱 실패: ${errorMsg}` };
+      return { topics: [], error: `Failed to parse AI response: ${errorMsg}` };
     }
   }
 }

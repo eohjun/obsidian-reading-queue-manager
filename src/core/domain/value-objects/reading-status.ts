@@ -1,11 +1,11 @@
 /**
- * 읽기 아이템의 상태를 나타내는 Value Object
+ * Value Object representing reading item status
  */
 export enum ReadingStatusType {
-  QUEUE = 'queue',       // 대기 중
-  READING = 'reading',   // 읽는 중
-  DONE = 'done',         // 완료
-  ABANDONED = 'abandoned' // 포기
+  QUEUE = 'queue',       // In queue
+  READING = 'reading',   // Currently reading
+  DONE = 'done',         // Completed
+  ABANDONED = 'abandoned' // Abandoned
 }
 
 export class ReadingStatus {
@@ -65,10 +65,10 @@ export class ReadingStatus {
 
   getDisplayText(): string {
     switch (this.value) {
-      case ReadingStatusType.QUEUE: return '대기';
-      case ReadingStatusType.READING: return '읽는 중';
-      case ReadingStatusType.DONE: return '완료';
-      case ReadingStatusType.ABANDONED: return '포기';
+      case ReadingStatusType.QUEUE: return 'Queue';
+      case ReadingStatusType.READING: return 'Reading';
+      case ReadingStatusType.DONE: return 'Done';
+      case ReadingStatusType.ABANDONED: return 'Abandoned';
     }
   }
 

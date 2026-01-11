@@ -32,7 +32,7 @@ export class InsightsModal extends Modal {
     }
 
     // Header
-    contentEl.createEl('h2', { text: '💡 인사이트 & 노트 추천' });
+    contentEl.createEl('h2', { text: '💡 Insights & Note Suggestions' });
     contentEl.createEl('p', {
       text: this.item.title,
       cls: 'insights-modal-title',
@@ -56,7 +56,7 @@ export class InsightsModal extends Modal {
     buttonContainer.style.textAlign = 'center';
 
     const closeBtn = buttonContainer.createEl('button', {
-      text: '닫기',
+      text: 'Close',
       cls: 'mod-cta',
     });
     closeBtn.addEventListener('click', () => this.close());
@@ -72,12 +72,12 @@ export class InsightsModal extends Modal {
     const section = container.createDiv({ cls: 'insights-section' });
 
     // Summary
-    section.createEl('h3', { text: '📝 요약' });
+    section.createEl('h3', { text: '📝 Summary' });
     section.createEl('p', { text: analysis.summary });
 
     // Key Insights
     if (analysis.keyInsights.length > 0) {
-      section.createEl('h3', { text: '🔑 핵심 인사이트' });
+      section.createEl('h3', { text: '🔑 Key Insights' });
       const list = section.createEl('ul', { cls: 'insights-list' });
       for (const insight of analysis.keyInsights) {
         const li = list.createEl('li');
@@ -88,14 +88,14 @@ export class InsightsModal extends Modal {
         setIcon(copyBtn, 'copy');
         copyBtn.addEventListener('click', async () => {
           await navigator.clipboard.writeText(insight);
-          new Notice('인사이트가 복사되었습니다.');
+          new Notice('Insight copied to clipboard.');
         });
       }
     }
 
     // Tags
     if (analysis.suggestedTags.length > 0) {
-      section.createEl('h3', { text: '🏷️ 추천 태그' });
+      section.createEl('h3', { text: '🏷️ Suggested Tags' });
       const tagsEl = section.createDiv({ cls: 'insights-tags' });
       for (const tag of analysis.suggestedTags) {
         tagsEl.createSpan({ cls: 'reading-queue-tag', text: `#${tag}` });
@@ -105,24 +105,24 @@ export class InsightsModal extends Modal {
     // Metadata
     const metaEl = section.createDiv({ cls: 'insights-meta' });
     metaEl.createEl('small', {
-      text: `분석 일시: ${analysis.analyzedAt.toLocaleString()} | 모델: ${analysis.model}`,
+      text: `Analyzed: ${analysis.analyzedAt.toLocaleString()} | Model: ${analysis.model}`,
     });
   }
 
   private renderNoAnalysisState(container: HTMLElement): void {
     const section = container.createDiv({ cls: 'insights-section empty' });
     section.createEl('p', {
-      text: '이 아이템에 대한 분석 결과가 없습니다.',
+      text: 'No analysis results available for this item.',
     });
     section.createEl('p', {
-      text: '수정 화면에서 분석을 실행해보세요.',
+      text: 'Run analysis from the edit screen.',
       cls: 'muted',
     });
   }
 
   private renderNoteTopicsSection(container: HTMLElement): void {
     const section = container.createDiv({ cls: 'note-topics-section' });
-    section.createEl('h3', { text: '📝 영구 노트 주제 추천' });
+    section.createEl('h3', { text: '📝 Permanent Note Topic Suggestions' });
 
     const topicsContainer = section.createDiv({ cls: 'note-topics-container' });
 
@@ -138,16 +138,16 @@ export class InsightsModal extends Modal {
 
     if (this.isLoadingTopics) {
       const loadingEl = container.createDiv({ cls: 'note-topics-loading' });
-      loadingEl.createSpan({ text: '노트 주제 생성 중...' });
+      loadingEl.createSpan({ text: 'Generating note topics...' });
       return;
     }
 
     const description = container.createEl('p', {
-      text: '읽은 내용을 바탕으로 영구 노트로 정리할 주제를 추천받을 수 있습니다.',
+      text: 'Get suggestions for permanent note topics based on what you read.',
     });
 
     const generateBtn = container.createEl('button', {
-      text: '📝 노트 주제 추천 받기',
+      text: '📝 Get Note Topic Suggestions',
       cls: 'mod-cta',
     });
     generateBtn.style.marginTop = '10px';
@@ -159,7 +159,7 @@ export class InsightsModal extends Modal {
 
   private async generateNoteTopics(container: HTMLElement): Promise<void> {
     if (!this.plugin.costTracker) {
-      new Notice('AI 서비스가 초기화되지 않았습니다.');
+      new Notice('AI service not initialized.');
       return;
     }
 
@@ -186,14 +186,14 @@ export class InsightsModal extends Modal {
         }
 
         this.renderNoteTopics(container);
-        new Notice(`${result.topics.length}개의 노트 주제가 추천되었습니다.`);
+        new Notice(`${result.topics.length} note topics suggested.`);
       } else {
-        new Notice(result.error || '노트 주제 생성에 실패했습니다.');
+        new Notice(result.error || 'Failed to generate note topics.');
         this.isLoadingTopics = false;
         this.renderGenerateTopicsButton(container);
       }
     } catch (error) {
-      new Notice('노트 주제 생성 중 오류가 발생했습니다.');
+      new Notice('Error generating note topics.');
       console.error('Note topic generation error:', error);
       this.isLoadingTopics = false;
       this.renderGenerateTopicsButton(container);
@@ -211,13 +211,13 @@ export class InsightsModal extends Modal {
     actionRow.style.flexWrap = 'wrap';
 
     const createAllBtn = actionRow.createEl('button', {
-      text: '📄 전체 노트 생성',
+      text: '📄 Create Combined Note',
       cls: 'mod-cta',
     });
     createAllBtn.addEventListener('click', () => this.createCombinedNote());
 
     const regenerateBtn = actionRow.createEl('button', {
-      text: '🔄 다시 추천받기',
+      text: '🔄 Regenerate',
     });
     regenerateBtn.addEventListener('click', async () => {
       this.noteTopics = [];
@@ -233,7 +233,7 @@ export class InsightsModal extends Modal {
       const titleRow = topicCard.createDiv({ cls: 'note-topic-title-row' });
       titleRow.createEl('h4', { text: topic.title });
 
-      const createBtn = titleRow.createEl('button', { text: '노트 생성' });
+      const createBtn = titleRow.createEl('button', { text: 'Create Note' });
       createBtn.addEventListener('click', () => this.createNoteFromTopic(topic));
 
       // Description
@@ -278,7 +278,7 @@ export class InsightsModal extends Modal {
       // Check if file exists (with adapter fallback for sync scenarios)
       const fileExists = await this.fileExists(filePath);
       if (fileExists) {
-        new Notice('같은 이름의 노트가 이미 존재합니다.');
+        new Notice('A note with the same name already exists.');
         return;
       }
 
@@ -288,12 +288,12 @@ export class InsightsModal extends Modal {
       this.item.addLinkedNote(filePath);
       await this.plugin.repository.save(this.item);
 
-      new Notice(`노트가 생성되었습니다: ${fileName}`);
+      new Notice(`Note created: ${fileName}`);
 
       // Open the created note
       await this.app.workspace.openLinkText(filePath, '', true);
     } catch (error) {
-      new Notice('노트 생성에 실패했습니다.');
+      new Notice('Failed to create note.');
       console.error('Note creation error:', error);
     }
   }
@@ -359,7 +359,7 @@ export class InsightsModal extends Modal {
   private async createCombinedNote(): Promise<void> {
     const analysis = this.item.analysis;
     if (!analysis) {
-      new Notice('분석 결과가 없습니다.');
+      new Notice('No analysis results available.');
       return;
     }
 
@@ -368,7 +368,7 @@ export class InsightsModal extends Modal {
 
     // Create file
     const safeTitle = this.item.title.replace(/[\\/:*?"<>|]/g, '').substring(0, 50);
-    const fileName = `${safeTitle} - 종합 인사이트.md`;
+    const fileName = `${safeTitle} - Comprehensive Insights.md`;
     const folderPath = this.plugin.settings.defaultNoteFolder;
     const filePath = normalizePath(folderPath ? `${folderPath}/${fileName}` : fileName);
 
@@ -379,7 +379,7 @@ export class InsightsModal extends Modal {
 
       const fileExists = await this.fileExists(filePath);
       if (fileExists) {
-        new Notice('같은 이름의 노트가 이미 존재합니다.');
+        new Notice('A note with the same name already exists.');
         return;
       }
 
@@ -389,12 +389,12 @@ export class InsightsModal extends Modal {
       this.item.addLinkedNote(filePath);
       await this.plugin.repository.save(this.item);
 
-      new Notice(`종합 노트가 생성되었습니다: ${fileName}`);
+      new Notice(`Combined note created: ${fileName}`);
 
       // Open the created note
       await this.app.workspace.openLinkText(filePath, '', true);
     } catch (error) {
-      new Notice('종합 노트 생성에 실패했습니다.');
+      new Notice('Failed to create combined note.');
       console.error('Combined note creation error:', error);
     }
   }
@@ -424,12 +424,12 @@ export class InsightsModal extends Modal {
     // Note topics section
     let topicsSection = '';
     if (this.noteTopics.length > 0) {
-      topicsSection = '\n## 📝 영구 노트 주제\n\n';
+      topicsSection = '\n## 📝 Permanent Note Topics\n\n';
       for (const topic of this.noteTopics) {
         topicsSection += `### ${topic.title}\n\n`;
         topicsSection += `${topic.description}\n\n`;
         if (topic.keyPoints.length > 0) {
-          topicsSection += '**핵심 포인트:**\n';
+          topicsSection += '**Key Points:**\n';
           topicsSection += topic.keyPoints.map(p => `- ${p}`).join('\n');
           topicsSection += '\n\n';
         }
@@ -443,29 +443,29 @@ created: ${new Date().toISOString().split('T')[0]}
 type: comprehensive-insight
 ---
 
-# ${this.item.title} - 종합 인사이트
+# ${this.item.title} - Comprehensive Insights
 
-## 📌 출처
+## 📌 Source
 
 - ${sourceLink}
 
-## 📝 요약
+## 📝 Summary
 
 ${analysis.summary}
 
-## 🔑 핵심 인사이트
+## 🔑 Key Insights
 
 ${insightsList}
 ${topicsSection}
-## 💭 연결된 생각
+## 💭 Related Thoughts
 
 
 
-## 📋 메타데이터
+## 📋 Metadata
 
-- 분석 일시: ${analysis.analyzedAt.toLocaleString()}
-- 모델: ${analysis.model}
-${analysis.estimatedReadingTime ? `- 예상 읽기 시간: ${analysis.getReadingTimeDisplay()}` : ''}
+- Analyzed: ${analysis.analyzedAt.toLocaleString()}
+- Model: ${analysis.model}
+${analysis.estimatedReadingTime ? `- Estimated reading time: ${analysis.getReadingTimeDisplay()}` : ''}
 `;
   }
 
@@ -484,15 +484,15 @@ created: ${new Date().toISOString().split('T')[0]}
 
 ${topic.description}
 
-## 핵심 포인트
+## Key Points
 
 ${keyPointsList}
 
-## 출처
+## Source
 
 - ${sourceLink}
 
-## 연결된 생각
+## Related Thoughts
 
 
 

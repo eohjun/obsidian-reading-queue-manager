@@ -29,15 +29,15 @@ export class GetQueueItemsUseCase {
         items = await this.repository.getActiveItems();
       }
 
-      // 정렬
+      // Sort
       if (input.sortBy) {
         items = this.sortItems(items, input.sortBy, input.sortOrder || 'desc');
       } else {
-        // 기본 정렬: 우선순위 높은 순 → 추가일 오래된 순
+        // Default sort: priority (high first) → added date (oldest first)
         items = this.sortItems(items, 'priority', 'desc');
       }
 
-      // 통계
+      // Stats
       const stats = await this.repository.getStats();
 
       return { success: true, items, stats };
@@ -45,7 +45,7 @@ export class GetQueueItemsUseCase {
       return {
         success: false,
         items: [],
-        error: error instanceof Error ? error.message : '목록 조회 중 오류가 발생했습니다.',
+        error: error instanceof Error ? error.message : 'Error retrieving queue items.',
       };
     }
   }

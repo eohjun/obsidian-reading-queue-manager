@@ -17,20 +17,20 @@ export class DeleteReadingItemUseCase {
       const item = await this.repository.findById(input.itemId);
 
       if (!item) {
-        return { success: false, error: '아이템을 찾을 수 없습니다.' };
+        return { success: false, error: 'Item not found.' };
       }
 
       const deleted = await this.repository.delete(input.itemId);
 
       if (!deleted) {
-        return { success: false, error: '아이템 삭제에 실패했습니다.' };
+        return { success: false, error: 'Failed to delete item.' };
       }
 
       return { success: true };
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : '아이템 삭제 중 오류가 발생했습니다.',
+        error: error instanceof Error ? error.message : 'Error deleting item.',
       };
     }
   }

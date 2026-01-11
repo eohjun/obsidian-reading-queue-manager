@@ -25,12 +25,12 @@ export class AddReadingItemUseCase {
 
   async execute(input: AddReadingItemInput): Promise<AddReadingItemOutput> {
     try {
-      // 유효성 검사
+      // Validation
       if (!input.title?.trim()) {
-        return { success: false, error: '제목을 입력해주세요.' };
+        return { success: false, error: 'Please enter a title.' };
       }
 
-      // 새 아이템 생성
+      // Create new item
       const item = ReadingItem.create({
         title: input.title.trim(),
         url: input.url?.trim() || undefined,
@@ -42,14 +42,14 @@ export class AddReadingItemUseCase {
         analysis: input.analysis,
       });
 
-      // 저장
+      // Save
       const savedItem = await this.repository.save(item);
 
       return { success: true, item: savedItem };
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : '아이템 추가 중 오류가 발생했습니다.',
+        error: error instanceof Error ? error.message : 'Error adding item.',
       };
     }
   }

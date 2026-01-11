@@ -89,11 +89,11 @@ export class ReadingQueueView extends ItemView {
 
     // Status filter
     const statusSelect = filtersEl.createEl('select');
-    statusSelect.createEl('option', { text: '모든 상태', value: '' });
-    statusSelect.createEl('option', { text: '📚 대기', value: ReadingStatusType.QUEUE });
-    statusSelect.createEl('option', { text: '📖 읽는 중', value: ReadingStatusType.READING });
-    statusSelect.createEl('option', { text: '✅ 완료', value: ReadingStatusType.DONE });
-    statusSelect.createEl('option', { text: '❌ 포기', value: ReadingStatusType.ABANDONED });
+    statusSelect.createEl('option', { text: 'All Status', value: '' });
+    statusSelect.createEl('option', { text: '📚 Queue', value: ReadingStatusType.QUEUE });
+    statusSelect.createEl('option', { text: '📖 Reading', value: ReadingStatusType.READING });
+    statusSelect.createEl('option', { text: '✅ Done', value: ReadingStatusType.DONE });
+    statusSelect.createEl('option', { text: '❌ Abandoned', value: ReadingStatusType.ABANDONED });
 
     statusSelect.addEventListener('change', async () => {
       if (statusSelect.value) {
@@ -106,10 +106,10 @@ export class ReadingQueueView extends ItemView {
 
     // Priority filter
     const prioritySelect = filtersEl.createEl('select');
-    prioritySelect.createEl('option', { text: '모든 우선순위', value: '' });
-    prioritySelect.createEl('option', { text: '🔴 높음', value: PriorityLevelType.HIGH });
-    prioritySelect.createEl('option', { text: '🟡 보통', value: PriorityLevelType.MEDIUM });
-    prioritySelect.createEl('option', { text: '🟢 낮음', value: PriorityLevelType.LOW });
+    prioritySelect.createEl('option', { text: 'All Priority', value: '' });
+    prioritySelect.createEl('option', { text: '🔴 High', value: PriorityLevelType.HIGH });
+    prioritySelect.createEl('option', { text: '🟡 Medium', value: PriorityLevelType.MEDIUM });
+    prioritySelect.createEl('option', { text: '🟢 Low', value: PriorityLevelType.LOW });
 
     prioritySelect.addEventListener('change', async () => {
       if (prioritySelect.value) {
@@ -143,8 +143,8 @@ export class ReadingQueueView extends ItemView {
   private renderEmptyState(container: Element): void {
     const emptyEl = container.createDiv({ cls: 'reading-queue-empty' });
     emptyEl.createDiv({ cls: 'reading-queue-empty-icon', text: '📚' });
-    emptyEl.createEl('p', { text: '읽기 큐가 비어있습니다.' });
-    emptyEl.createEl('p', { text: '+ 버튼을 눌러 읽을 자료를 추가해보세요.' });
+    emptyEl.createEl('p', { text: 'Your reading queue is empty.' });
+    emptyEl.createEl('p', { text: 'Click the + button to add reading materials.' });
   }
 
   private renderItems(container: Element): void {
@@ -178,7 +178,7 @@ export class ReadingQueueView extends ItemView {
     if (item.estimatedMinutes) {
       const timeEl = metaRow.createSpan({ cls: 'time-estimate' });
       setIcon(timeEl.createSpan(), 'clock');
-      timeEl.createSpan({ text: `${item.estimatedMinutes}분` });
+      timeEl.createSpan({ text: `${item.estimatedMinutes} min` });
     }
 
     // Tags
@@ -234,7 +234,7 @@ export class ReadingQueueView extends ItemView {
     if (item.status.isQueue()) {
       const startBtn = container.createEl('button', {
         cls: 'reading-queue-action-btn',
-        text: '시작',
+        text: 'Start',
       });
       startBtn.addEventListener('click', () => this.updateStatus(item.id, 'start'));
     }
@@ -242,7 +242,7 @@ export class ReadingQueueView extends ItemView {
     if (item.status.isReading()) {
       const doneBtn = container.createEl('button', {
         cls: 'reading-queue-action-btn primary',
-        text: '완료',
+        text: 'Done',
       });
       doneBtn.addEventListener('click', () => this.updateStatus(item.id, 'done'));
     }
@@ -250,7 +250,7 @@ export class ReadingQueueView extends ItemView {
     if (item.status.isActive()) {
       const abandonBtn = container.createEl('button', {
         cls: 'reading-queue-action-btn',
-        text: '포기',
+        text: 'Abandon',
       });
       abandonBtn.addEventListener('click', () => this.updateStatus(item.id, 'abandon'));
     }
@@ -261,14 +261,14 @@ export class ReadingQueueView extends ItemView {
         cls: 'reading-queue-action-btn insights',
         text: '💡',
       });
-      insightsBtn.title = '인사이트 보기';
+      insightsBtn.title = 'View Insights';
       insightsBtn.addEventListener('click', () => this.showInsightsModal(item));
     }
 
     if (item.status.isDone() || item.status.isAbandoned()) {
       const restoreBtn = container.createEl('button', {
         cls: 'reading-queue-action-btn',
-        text: '복원',
+        text: 'Restore',
       });
       restoreBtn.addEventListener('click', () => this.updateStatus(item.id, 'backToQueue'));
     }
@@ -285,7 +285,7 @@ export class ReadingQueueView extends ItemView {
     if (item.url) {
       menu.addItem((menuItem) => {
         menuItem
-          .setTitle('URL 열기')
+          .setTitle('Open URL')
           .setIcon('external-link')
           .onClick(() => {
             window.open(item.url, '_blank');
@@ -295,7 +295,7 @@ export class ReadingQueueView extends ItemView {
 
     menu.addItem((menuItem) => {
       menuItem
-        .setTitle('수정')
+        .setTitle('Edit')
         .setIcon('pencil')
         .onClick(() => {
           this.plugin.showEditItemModal(item);
@@ -306,7 +306,7 @@ export class ReadingQueueView extends ItemView {
 
     menu.addItem((menuItem) => {
       menuItem
-        .setTitle('삭제')
+        .setTitle('Delete')
         .setIcon('trash')
         .onClick(async () => {
           await this.deleteItem(item.id);

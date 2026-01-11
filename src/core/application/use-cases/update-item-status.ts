@@ -25,12 +25,12 @@ export class UpdateItemStatusUseCase {
       const item = await this.repository.findById(input.itemId);
 
       if (!item) {
-        return { success: false, error: '아이템을 찾을 수 없습니다.' };
+        return { success: false, error: 'Item not found.' };
       }
 
       const previousStatus = item.status.getValue();
 
-      // 상태 변경
+      // Update status
       switch (input.action) {
         case 'start':
           item.startReading();
@@ -45,12 +45,12 @@ export class UpdateItemStatusUseCase {
           item.backToQueue();
           break;
         default:
-          return { success: false, error: '알 수 없는 액션입니다.' };
+          return { success: false, error: 'Unknown action.' };
       }
 
       const newStatus = item.status.getValue();
 
-      // 변경 없으면 그냥 반환
+      // Return if no change
       if (previousStatus === newStatus) {
         return {
           success: true,
@@ -60,7 +60,7 @@ export class UpdateItemStatusUseCase {
         };
       }
 
-      // 저장
+      // Save
       const savedItem = await this.repository.save(item);
 
       return {
@@ -72,7 +72,7 @@ export class UpdateItemStatusUseCase {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : '상태 변경 중 오류가 발생했습니다.',
+        error: error instanceof Error ? error.message : 'Error updating status.',
       };
     }
   }

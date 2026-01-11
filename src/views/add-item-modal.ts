@@ -42,7 +42,7 @@ export class AddItemModal extends Modal {
     this.onSave = onSave;
     this.editItem = editItem;
 
-    // 수정 모드일 경우 기존 값 로드
+    // Load existing values for edit mode
     if (editItem) {
       this.title = editItem.title;
       this.url = editItem.url || '';
@@ -59,17 +59,17 @@ export class AddItemModal extends Modal {
     contentEl.addClass('reading-queue-modal');
 
     contentEl.createEl('h2', {
-      text: this.editItem ? '읽기 아이템 수정' : '읽기 아이템 추가',
+      text: this.editItem ? 'Edit Reading Item' : 'Add Reading Item',
     });
 
     // Title
     new Setting(contentEl)
-      .setName('제목')
-      .setDesc('읽을 자료의 제목')
+      .setName('Title')
+      .setDesc('Title of the reading material')
       .addText((text) => {
         this.titleInput = text.inputEl;
         text
-          .setPlaceholder('예: Clean Architecture')
+          .setPlaceholder('e.g., Clean Architecture')
           .setValue(this.title)
           .onChange((value) => {
             this.title = value;
@@ -80,7 +80,7 @@ export class AddItemModal extends Modal {
     // URL with AI Analyze button
     const urlSetting = new Setting(contentEl)
       .setName('URL')
-      .setDesc('웹 링크 (선택)')
+      .setDesc('Web link (optional)')
       .addText((text) => {
         text
           .setPlaceholder('https://...')
@@ -100,7 +100,7 @@ export class AddItemModal extends Modal {
         this.analyzeButton = button.buttonEl;
         button
           .setIcon('sparkles')
-          .setTooltip('AI로 콘텐츠 분석')
+          .setTooltip('Analyze content with AI')
           .onClick(() => this.analyzeUrl());
         button.buttonEl.addClass('reading-queue-analyze-btn');
         this.updateAnalyzeButtonState();
@@ -115,14 +115,14 @@ export class AddItemModal extends Modal {
 
     // Priority
     new Setting(contentEl)
-      .setName('우선순위')
-      .setDesc('읽기 우선순위')
+      .setName('Priority')
+      .setDesc('Reading priority')
       .addDropdown((dropdown) => {
         this.priorityDropdown = dropdown.selectEl;
         dropdown
-          .addOption(PriorityLevelType.HIGH, '🔴 높음')
-          .addOption(PriorityLevelType.MEDIUM, '🟡 보통')
-          .addOption(PriorityLevelType.LOW, '🟢 낮음')
+          .addOption(PriorityLevelType.HIGH, '🔴 High')
+          .addOption(PriorityLevelType.MEDIUM, '🟡 Medium')
+          .addOption(PriorityLevelType.LOW, '🟢 Low')
           .setValue(this.priority)
           .onChange((value) => {
             this.priority = value as PriorityLevelType;
@@ -131,8 +131,8 @@ export class AddItemModal extends Modal {
 
     // Estimated time
     new Setting(contentEl)
-      .setName('예상 시간')
-      .setDesc('분 단위 (선택)')
+      .setName('Estimated Time')
+      .setDesc('In minutes (optional)')
       .addText((text) => {
         this.estimatedMinutesInput = text.inputEl;
         text
@@ -149,12 +149,12 @@ export class AddItemModal extends Modal {
 
     // Tags
     new Setting(contentEl)
-      .setName('태그')
-      .setDesc('쉼표로 구분 (선택)')
+      .setName('Tags')
+      .setDesc('Comma separated (optional)')
       .addText((text) => {
         this.tagsInputEl = text.inputEl;
         text
-          .setPlaceholder('개발, 아키텍처, 클린코드')
+          .setPlaceholder('development, architecture, clean-code')
           .setValue(this.tagsInput)
           .onChange((value) => {
             this.tagsInput = value;
@@ -164,11 +164,11 @@ export class AddItemModal extends Modal {
 
     // Notes
     new Setting(contentEl)
-      .setName('메모')
-      .setDesc('간단한 메모 (선택)')
+      .setName('Notes')
+      .setDesc('Quick notes (optional)')
       .addTextArea((textarea) => {
         textarea
-          .setPlaceholder('이 자료에 대한 메모...')
+          .setPlaceholder('Notes about this material...')
           .setValue(this.notes)
           .onChange((value) => {
             this.notes = value;
@@ -186,11 +186,11 @@ export class AddItemModal extends Modal {
     buttonContainer.style.gap = '8px';
     buttonContainer.style.marginTop = '16px';
 
-    const cancelBtn = buttonContainer.createEl('button', { text: '취소' });
+    const cancelBtn = buttonContainer.createEl('button', { text: 'Cancel' });
     cancelBtn.addEventListener('click', () => this.close());
 
     const saveBtn = buttonContainer.createEl('button', {
-      text: this.editItem ? '수정' : '추가',
+      text: this.editItem ? 'Update' : 'Add',
       cls: 'mod-cta',
     });
     saveBtn.addEventListener('click', () => this.save());
@@ -205,9 +205,9 @@ export class AddItemModal extends Modal {
   }
 
   private async save(): Promise<void> {
-    // 유효성 검사
+    // Validation
     if (!this.title.trim()) {
-      new Notice('제목을 입력해주세요.');
+      new Notice('Please enter a title.');
       return;
     }
 
@@ -218,7 +218,7 @@ export class AddItemModal extends Modal {
 
     try {
       if (this.editItem) {
-        // 수정
+        // Update existing item
         const useCase = new UpdateReadingItemUseCase(this.plugin.repository);
         const result = await useCase.execute({
           itemId: this.editItem.id,
@@ -232,14 +232,14 @@ export class AddItemModal extends Modal {
         });
 
         if (result.success) {
-          new Notice('아이템이 수정되었습니다.');
+          new Notice('Item updated successfully.');
           this.onSave();
           this.close();
         } else {
-          new Notice(result.error || '수정에 실패했습니다.');
+          new Notice(result.error || 'Failed to update item.');
         }
       } else {
-        // 추가
+        // Add new item
         const useCase = new AddReadingItemUseCase(this.plugin.repository);
         const result = await useCase.execute({
           title: this.title.trim(),
@@ -252,15 +252,15 @@ export class AddItemModal extends Modal {
         });
 
         if (result.success) {
-          new Notice('아이템이 추가되었습니다.');
+          new Notice('Item added successfully.');
           this.onSave();
           this.close();
         } else {
-          new Notice(result.error || '추가에 실패했습니다.');
+          new Notice(result.error || 'Failed to add item.');
         }
       }
     } catch (error) {
-      new Notice('오류가 발생했습니다.');
+      new Notice('An error occurred.');
       console.error(error);
     }
   }
@@ -304,13 +304,13 @@ export class AddItemModal extends Modal {
 
     const costTracker = this.plugin.costTracker;
     if (!costTracker) {
-      new Notice('AI 서비스가 초기화되지 않았습니다.');
+      new Notice('AI service not initialized.');
       return;
     }
 
     this.isAnalyzing = true;
     this.updateAnalyzeButtonState();
-    new Notice('콘텐츠 분석 중...');
+    new Notice('Analyzing content...');
 
     try {
       const useCase = new AnalyzeUrlContentUseCase(costTracker);
@@ -324,12 +324,12 @@ export class AddItemModal extends Modal {
         this.analysis = result.analysis;
         this.renderAnalysisResults();
         this.autoApplySuggestions();
-        new Notice('분석 완료!');
+        new Notice('Analysis complete!');
       } else {
-        new Notice(result.error || '분석에 실패했습니다.');
+        new Notice(result.error || 'Analysis failed.');
       }
     } catch (error) {
-      const message = error instanceof Error ? error.message : '분석 중 오류 발생';
+      const message = error instanceof Error ? error.message : 'Error during analysis';
       new Notice(message);
       console.error('Analysis error:', error);
     } finally {
@@ -356,11 +356,11 @@ export class AddItemModal extends Modal {
     header.style.alignItems = 'center';
     header.style.marginBottom = '12px';
 
-    header.createEl('h4', { text: '✨ AI 분석 결과' }).style.margin = '0';
+    header.createEl('h4', { text: '✨ AI Analysis Results' }).style.margin = '0';
 
     // Apply all button
     const applyAllBtn = header.createEl('button', {
-      text: '전체 적용',
+      text: 'Apply All',
       cls: 'mod-cta',
     });
     applyAllBtn.style.fontSize = '12px';
@@ -369,21 +369,21 @@ export class AddItemModal extends Modal {
 
     // Title suggestion
     if (this.analysis.title && this.analysis.title !== this.title) {
-      this.renderSuggestionItem('제목', this.analysis.title, () => {
+      this.renderSuggestionItem('Title', this.analysis.title, () => {
         this.title = this.analysis!.title!;
-        new Notice('제목이 적용되었습니다.');
+        new Notice('Title applied.');
       });
     }
 
     // Summary
     const summarySection = this.analysisContainer.createDiv({ cls: 'analysis-section' });
-    summarySection.createEl('strong', { text: '📝 요약' });
+    summarySection.createEl('strong', { text: '📝 Summary' });
     summarySection.createEl('p', { text: this.analysis.summary }).style.margin = '4px 0 12px 0';
 
     // Key insights
     if (this.analysis.keyInsights.length > 0) {
       const insightsSection = this.analysisContainer.createDiv({ cls: 'analysis-section' });
-      insightsSection.createEl('strong', { text: '💡 핵심 인사이트' });
+      insightsSection.createEl('strong', { text: '💡 Key Insights' });
       const insightsList = insightsSection.createEl('ul');
       insightsList.style.margin = '4px 0 12px 0';
       insightsList.style.paddingLeft = '20px';
@@ -395,7 +395,7 @@ export class AddItemModal extends Modal {
     // Suggested tags
     if (this.analysis.suggestedTags.length > 0) {
       this.renderSuggestionItem(
-        '태그',
+        'Tags',
         this.analysis.suggestedTags.join(', '),
         () => this.applySuggestedTags()
       );
@@ -404,12 +404,12 @@ export class AddItemModal extends Modal {
     // Suggested priority
     if (this.analysis.suggestedPriority) {
       const priorityLabels: Record<string, string> = {
-        high: '🔴 높음',
-        medium: '🟡 보통',
-        low: '🟢 낮음',
+        high: '🔴 High',
+        medium: '🟡 Medium',
+        low: '🟢 Low',
       };
       this.renderSuggestionItem(
-        '우선순위',
+        'Priority',
         priorityLabels[this.analysis.suggestedPriority] || this.analysis.suggestedPriority,
         () => this.applySuggestedPriority()
       );
@@ -418,8 +418,8 @@ export class AddItemModal extends Modal {
     // Estimated reading time
     if (this.analysis.estimatedReadingTime) {
       this.renderSuggestionItem(
-        '예상 시간',
-        `${this.analysis.estimatedReadingTime}분`,
+        'Estimated Time',
+        `${this.analysis.estimatedReadingTime} min`,
         () => this.applySuggestedReadingTime()
       );
     }
@@ -439,7 +439,7 @@ export class AddItemModal extends Modal {
     labelSpan.createEl('strong', { text: label + ': ' });
     labelSpan.createSpan({ text: value });
 
-    const applyBtn = item.createEl('button', { text: '적용' });
+    const applyBtn = item.createEl('button', { text: 'Apply' });
     applyBtn.style.fontSize = '11px';
     applyBtn.style.padding = '2px 6px';
     applyBtn.addEventListener('click', () => {
@@ -461,29 +461,29 @@ export class AddItemModal extends Modal {
       if (this.titleInput) {
         this.titleInput.value = this.title;
       }
-      applied.push('제목');
+      applied.push('Title');
     }
 
     // Auto-apply tags if setting enabled
     if (aiSettings.autoSuggestTags && this.analysis.suggestedTags.length > 0) {
       this.applySuggestedTags(false);
-      applied.push('태그');
+      applied.push('Tags');
     }
 
     // Auto-apply priority if setting enabled
     if (aiSettings.autoSuggestPriority && this.analysis.suggestedPriority) {
       this.applySuggestedPriority(false);
-      applied.push('우선순위');
+      applied.push('Priority');
     }
 
     // Always auto-apply reading time if available and not set
     if (this.analysis.estimatedReadingTime && !this.estimatedMinutes) {
       this.applySuggestedReadingTime(false);
-      applied.push('예상 시간');
+      applied.push('Estimated Time');
     }
 
     if (applied.length > 0) {
-      new Notice(`자동 적용됨: ${applied.join(', ')}`);
+      new Notice(`Auto-applied: ${applied.join(', ')}`);
     }
   }
 
@@ -500,7 +500,7 @@ export class AddItemModal extends Modal {
     this.applySuggestedPriority(true);
     this.applySuggestedReadingTime(true);
 
-    new Notice('모든 제안이 적용되었습니다.');
+    new Notice('All suggestions applied.');
 
     // Re-render to show applied state
     this.renderAnalysisResults();
@@ -523,7 +523,7 @@ export class AddItemModal extends Modal {
     }
 
     if (showNotice) {
-      new Notice('태그가 적용되었습니다.');
+      new Notice('Tags applied.');
     }
   }
 
@@ -537,7 +537,7 @@ export class AddItemModal extends Modal {
     }
 
     if (showNotice) {
-      new Notice('우선순위가 적용되었습니다.');
+      new Notice('Priority applied.');
     }
   }
 
@@ -551,7 +551,7 @@ export class AddItemModal extends Modal {
     }
 
     if (showNotice) {
-      new Notice('예상 시간이 적용되었습니다.');
+      new Notice('Estimated time applied.');
     }
   }
 }

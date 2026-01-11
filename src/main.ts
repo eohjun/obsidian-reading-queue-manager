@@ -34,24 +34,24 @@ export default class ReadingQueuePlugin extends Plugin {
   async onload(): Promise<void> {
     console.log('Loading Reading Queue Manager plugin');
 
-    // Settings 로드
+    // Load settings
     await this.loadSettings();
 
-    // Repository 초기화
+    // Initialize repository
     this._repositoryImpl = new ObsidianReadingQueueRepository(this);
     this.repository = this._repositoryImpl;
     await this._repositoryImpl.load();
 
-    // AI Service 초기화
+    // Initialize AI service
     this.initializeAIServices();
 
-    // View 등록
+    // Register view
     this.registerView(
       VIEW_TYPE_READING_QUEUE,
       (leaf) => new ReadingQueueView(leaf, this)
     );
 
-    // Ribbon 아이콘 (list-checks: 체크리스트 아이콘으로 다른 플러그인과 구분)
+    // Ribbon icon (list-checks: checklist icon to distinguish from other plugins)
     this.addRibbonIcon('list-checks', 'Reading Queue', () => {
       this.activateView();
     });
@@ -84,9 +84,9 @@ export default class ReadingQueuePlugin extends Plugin {
     // Settings Tab
     this.addSettingTab(new ReadingQueueSettingTab(this));
 
-    // 레이아웃 준비 완료 후 사이드바 뷰 활성화 (옵션)
+    // Activate sidebar view after layout is ready (optional)
     this.app.workspace.onLayoutReady(() => {
-      // 자동으로 열고 싶으면 주석 해제
+      // Uncomment to open automatically
       // this.activateView();
     });
   }
@@ -206,7 +206,7 @@ export default class ReadingQueuePlugin extends Plugin {
 
   showAddItemModal(): void {
     const modal = new AddItemModal(this, async () => {
-      await this.activateView(); // 아이템 추가 후 자동으로 Reading Queue 패널 열기
+      await this.activateView(); // Auto-open Reading Queue panel after adding item
       this.refreshView();
     });
     modal.open();
@@ -232,17 +232,17 @@ export default class ReadingQueuePlugin extends Plugin {
         return;
       }
 
-      // URL 형식인지 확인
+      // Check if URL format
       const isUrl = trimmed.startsWith('http://') || trimmed.startsWith('https://');
 
       const modal = new AddItemModal(this, () => {
         this.refreshView();
       });
 
-      // 클립보드 내용을 미리 채움
+      // Pre-fill clipboard content
       if (isUrl) {
         (modal as any).url = trimmed;
-        (modal as any).title = trimmed; // URL을 임시 제목으로
+        (modal as any).title = trimmed; // Use URL as temporary title
       } else {
         (modal as any).title = trimmed;
       }
