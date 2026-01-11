@@ -1,9 +1,9 @@
 {
   "id": "reading-queue-manager",
   "name": "Reading Queue Manager",
-  "version": "0.2.15",
+  "version": "0.2.16",
   "minAppVersion": "1.4.0",
-  "description": "읽기 자료를 수집, AI 기반 분석/태깅, 우선순위화, 상태 추적하고 완독 후 영구 노트 작성을 지원하는 PKM 도구",
+  "description": "Collect reading materials, AI-powered analysis/tagging, prioritization, status tracking, and permanent note creation support",
   "author": "eohjun",
   "authorUrl": "https://github.com/eohjun",
   "fundingUrl": "",
