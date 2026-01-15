@@ -1,69 +1,121 @@
 # Reading Queue Manager
 
-읽기 자료를 수집, 우선순위화, 상태 추적하고 완독 후 자동으로 노트 템플릿을 생성하는 Obsidian PKM 플러그인.
+An Obsidian PKM plugin for collecting, prioritizing, tracking reading materials, and generating notes with AI-powered analysis.
 
-## 기능
+## Features
 
-### Phase 1 (MVP) - 현재 버전
-- ✅ 읽기 아이템 추가/수정/삭제
-- ✅ 상태 관리 (대기 → 읽는 중 → 완료/포기)
-- ✅ 우선순위 설정 (높음/보통/낮음)
-- ✅ 태그 시스템
-- ✅ 예상 읽기 시간 설정
-- ✅ 사이드바 뷰에서 큐 관리
-- ✅ 상태/우선순위 필터링
+### Core Features
+- ✅ Add/edit/delete reading items
+- ✅ Status management (Pending → Reading → Complete/Abandoned)
+- ✅ Priority settings (High/Medium/Low)
+- ✅ Tag system
+- ✅ Estimated reading time
+- ✅ Sidebar view for queue management
+- ✅ Status/priority filtering
 
-### 향후 계획
-- Phase 2: URL 메타데이터 자동 추출, 시간 예산 필터, 완독 후 노트 생성
-- Phase 3: Pocket/Instapaper/Zotero 연동
+### AI-Powered Features
+- **AI Summary**: Automatically summarize content from URLs
+- **AI Tagging**: Auto-generate relevant tags
+- **Key Extraction**: Extract key insights from articles
+- **Topic Recommendations**: Suggest permanent note topics
+- **Insight Note Generation**: Create comprehensive insight notes
 
-## 설치
+## Supported AI Providers
 
-### BRAT (권장)
-1. BRAT 플러그인 설치
-2. `eohjun/obsidian-reading-queue-manager` 추가
+| Provider | Model | Notes |
+|----------|-------|-------|
+| **OpenAI** | GPT-4o, GPT-4o-mini | Recommended for summarization |
+| **Google Gemini** | Gemini 1.5 Pro/Flash | Free tier available |
+| **Anthropic** | Claude 3.5 Sonnet | High quality analysis |
 
-### 수동 설치
-1. [Releases](https://github.com/eohjun/obsidian-reading-queue-manager/releases)에서 최신 버전 다운로드
-2. `main.js`, `manifest.json`, `styles.css`를 `.obsidian/plugins/reading-queue-manager/`에 복사
-3. Obsidian 재시작 후 플러그인 활성화
+## Installation
 
-## 사용법
+### BRAT (Recommended)
+1. Install [BRAT](https://github.com/TfTHacker/obsidian42-brat) plugin
+2. Add `eohjun/obsidian-reading-queue-manager`
 
-1. 리본 아이콘 (📖) 클릭 또는 Command Palette에서 "Open Reading Queue"
-2. + 버튼으로 읽기 자료 추가
-3. 아이템 클릭으로 URL 열기, 우클릭으로 수정/삭제
-4. 상태 버튼으로 진행 상황 관리
+### Manual Installation
+1. Download latest version from [Releases](https://github.com/eohjun/obsidian-reading-queue-manager/releases)
+2. Copy `main.js`, `manifest.json`, `styles.css` to `.obsidian/plugins/reading-queue-manager/`
+3. Restart Obsidian and enable the plugin
 
-## 개발
+## Setup
+
+### API Key Configuration (for AI features)
+1. Open Settings → Reading Queue Manager
+2. Select AI Provider
+3. Enter API key
+4. Test connection
+
+## Usage
+
+1. Click ribbon icon (📖) or use Command Palette "Open Reading Queue"
+2. Click + button to add reading material
+3. Click item to open URL, right-click to edit/delete
+4. Use status buttons to track progress
+5. After completing an item, use AI features to generate notes
+
+## Commands
+
+| Command | Description |
+|---------|-------------|
+| **Open Reading Queue** | Open the reading queue sidebar |
+| **Add reading item** | Add new item to queue |
+| **Summarize current item** | AI summarize the selected item |
+| **Generate insight note** | Create comprehensive insight note |
+| **Suggest note topics** | Get permanent note topic suggestions |
+
+## Workflow
+
+```
+1. Add URL or article to queue
+2. Set priority and estimated time
+3. Read the material
+4. Mark as complete
+5. Use AI to summarize and extract insights
+6. Generate permanent note topics
+7. Create insight notes for your PKM
+```
+
+## Settings
+
+| Setting | Description | Default |
+|---------|-------------|---------|
+| AI Provider | Provider for AI features | OpenAI |
+| API Key | API key for selected provider | - |
+| Default Priority | Default priority for new items | Medium |
+| Auto-fetch metadata | Auto-extract URL metadata | true |
+| Output Folder | Folder for generated notes | `04_Zettelkasten` |
+
+## Development
 
 ```bash
-# 의존성 설치
+# Install dependencies
 npm install
 
-# 개발 모드 (watch)
+# Development mode (watch)
 npm run dev
 
-# 프로덕션 빌드
+# Production build
 npm run build
 
-# 타입 체크
+# Type check
 npm run typecheck
 ```
 
-## 아키텍처
+## Architecture
 
-Clean Architecture 패턴 적용:
+Follows Clean Architecture pattern:
 
 ```
 src/
 ├── core/
-│   ├── domain/         # 비즈니스 로직 (엔티티, 값 객체)
+│   ├── domain/         # Business logic (entities, value objects)
 │   ├── application/    # Use Cases
-│   └── adapters/       # Obsidian 어댑터
-└── views/              # UI 컴포넌트
+│   └── adapters/       # Obsidian adapters
+└── views/              # UI components
 ```
 
-## 라이선스
+## License
 
 MIT
