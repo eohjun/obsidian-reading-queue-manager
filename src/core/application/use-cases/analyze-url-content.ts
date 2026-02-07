@@ -173,7 +173,7 @@ export class AnalyzeUrlContentUseCase {
 
   private async fetchAndParseUrl(url: string): Promise<ParsedContent> {
     try {
-      const response = await requestUrl({
+      const fetchPromise = requestUrl({
         url,
         method: 'GET',
         headers: {
@@ -181,6 +181,10 @@ export class AnalyzeUrlContentUseCase {
           'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
         },
       });
+      const timeoutPromise = new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error('Request timeout (15s)')), 15000)
+      );
+      const response = await Promise.race([fetchPromise, timeoutPromise]);
 
       const html = response.text;
       return this.parseHtml(html, url);
