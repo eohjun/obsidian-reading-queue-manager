@@ -43,7 +43,8 @@ export class ReadingQueueView extends ItemView {
   }
 
   async onClose(): Promise<void> {
-    // Cleanup if needed
+    this.items = [];
+    this.currentFilter = {};
   }
 
   async refresh(): Promise<void> {

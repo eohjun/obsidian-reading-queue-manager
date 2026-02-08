@@ -103,14 +103,6 @@ export class OpenAIProvider extends BaseProvider {
     }
 
     try {
-      console.log(`[OpenAIProvider] Making API request:`, {
-        model: requestBody.model,
-        isReasoningModel,
-        messageCount: requestBody.messages.length,
-        maxTokensParam: isReasoningModel ? 'max_completion_tokens' : 'max_tokens',
-        maxTokensValue: isReasoningModel ? requestBody.max_completion_tokens : requestBody.max_tokens,
-      });
-
       const response = await this.makeRequest<OpenAIResponse>({
         url: `${this.config.endpoint}/chat/completions`,
         method: 'POST',
@@ -119,20 +111,6 @@ export class OpenAIProvider extends BaseProvider {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(requestBody),
-      });
-
-      console.log(`[OpenAIProvider] Raw API response:`, {
-        hasError: !!response.error,
-        hasChoices: !!response.choices,
-        choicesCount: response.choices?.length || 0,
-        firstChoice: response.choices?.[0] ? {
-          hasMessage: !!response.choices[0].message,
-          messageContent: response.choices[0].message?.content?.substring(0, 200) || '(null or empty)',
-          messageContentType: typeof response.choices[0].message?.content,
-          finishReason: response.choices[0].finish_reason,
-        } : null,
-        usage: response.usage,
-        fullResponse: JSON.stringify(response).substring(0, 1000),
       });
 
       if (response.error) {
