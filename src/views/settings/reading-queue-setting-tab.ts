@@ -20,9 +20,9 @@ export const DEFAULT_AI_SETTINGS: AISettings = {
   provider: 'claude',
   apiKeys: {},
   models: {
-    claude: 'claude-3-5-haiku-20241022',
+    claude: 'claude-haiku-4-5-20251001',
     gemini: 'gemini-2.0-flash',
-    openai: 'gpt-4o-mini',
+    openai: 'gpt-5-nano',
     grok: 'grok-4-1-fast-non-reasoning',
   },
   featureModels: {},
