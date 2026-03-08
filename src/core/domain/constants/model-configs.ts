@@ -1,207 +1,74 @@
 /**
  * Model Configurations
- * Centralized model settings, pricing, and token limits
+ *
+ * Re-exports shared configs from obsidian-llm-shared (single source of truth)
+ * and adds plugin-specific types, constants, and helpers.
  */
 
-import type { AIProviderType, AIProviderConfig, FeatureType } from '../interfaces/llm-provider';
+import {
+  type AIProviderType as SharedAIProviderType,
+  type AIProviderConfig as SharedAIProviderConfig,
+  type ModelConfig as SharedModelConfig,
+  AI_PROVIDERS as SHARED_AI_PROVIDERS,
+  MODEL_CONFIGS as SHARED_MODEL_CONFIGS,
+  getModelsByProvider as sharedGetModelsByProvider,
+  getModelConfig,
+  calculateCost as sharedCalculateCost,
+} from 'obsidian-llm-shared';
+
+import type { FeatureType } from '../interfaces/llm-provider';
+
+// Note: AIProviderType and AIProviderConfig are NOT re-exported here
+// to avoid conflicts with the canonical exports in ../interfaces/llm-provider.ts.
+
+// ── Plugin-specific tier extension ───────────────────────────────────
 
 export type ModelTier = 'economy' | 'standard' | 'premium';
 
-export interface ModelConfig {
-  id: string;
-  displayName: string;
-  provider: AIProviderType;
+/** Extended ModelConfig that includes the plugin-local `tier` field. */
+export interface ModelConfig extends SharedModelConfig {
   tier: ModelTier;
-  inputCostPer1M: number;
-  outputCostPer1M: number;
   maxInputTokens: number;
   maxOutputTokens: number;
   supportsVision: boolean;
   supportsStreaming: boolean;
 }
 
-export const MODEL_CONFIGS: Record<string, ModelConfig> = {
-  // Claude Models
-  'claude-opus-4.6': {
-    id: 'claude-opus-4-6',
-    displayName: 'Claude Opus 4.6',
-    provider: 'claude',
-    tier: 'premium',
-    inputCostPer1M: 5.0,
-    outputCostPer1M: 25.0,
-    maxInputTokens: 200000,
-    maxOutputTokens: 128000,
-    supportsVision: true,
-    supportsStreaming: true,
-  },
-  'claude-sonnet-4.6': {
-    id: 'claude-sonnet-4-6',
-    displayName: 'Claude Sonnet 4.6',
-    provider: 'claude',
-    tier: 'standard',
-    inputCostPer1M: 3.0,
-    outputCostPer1M: 15.0,
-    maxInputTokens: 200000,
-    maxOutputTokens: 64000,
-    supportsVision: true,
-    supportsStreaming: true,
-  },
-  'claude-haiku-4.5': {
-    id: 'claude-haiku-4-5-20251001',
-    displayName: 'Claude Haiku 4.5',
-    provider: 'claude',
-    tier: 'economy',
-    inputCostPer1M: 1.0,
-    outputCostPer1M: 5.0,
-    maxInputTokens: 200000,
-    maxOutputTokens: 64000,
-    supportsVision: true,
-    supportsStreaming: true,
-  },
-
-  // Gemini Models
-  'gemini-3.1-pro': {
-    id: 'gemini-3.1-pro-preview',
-    displayName: 'Gemini 3.1 Pro',
-    provider: 'gemini',
-    tier: 'premium',
-    inputCostPer1M: 2.0,
-    outputCostPer1M: 12.0,
-    maxInputTokens: 1000000,
-    maxOutputTokens: 65536,
-    supportsVision: true,
-    supportsStreaming: true,
-  },
-  'gemini-2.5-flash': {
-    id: 'gemini-2.5-flash',
-    displayName: 'Gemini 2.5 Flash',
-    provider: 'gemini',
-    tier: 'standard',
-    inputCostPer1M: 0.3,
-    outputCostPer1M: 2.5,
-    maxInputTokens: 1000000,
-    maxOutputTokens: 65536,
-    supportsVision: true,
-    supportsStreaming: true,
-  },
-  'gemini-2-flash': {
-    id: 'gemini-2.0-flash',
-    displayName: 'Gemini 2.0 Flash',
-    provider: 'gemini',
-    tier: 'economy',
-    inputCostPer1M: 0.1,
-    outputCostPer1M: 0.4,
-    maxInputTokens: 1000000,
-    maxOutputTokens: 8192,
-    supportsVision: true,
-    supportsStreaming: true,
-  },
-
-  // OpenAI Models
-  'gpt-5.4': {
-    id: 'gpt-5.4',
-    displayName: 'GPT-5.4',
-    provider: 'openai',
-    tier: 'premium',
-    inputCostPer1M: 2.5,
-    outputCostPer1M: 15.0,
-    maxInputTokens: 1050000,
-    maxOutputTokens: 128000,
-    supportsVision: true,
-    supportsStreaming: true,
-  },
-  'gpt-5-mini': {
-    id: 'gpt-5-mini',
-    displayName: 'GPT-5 Mini',
-    provider: 'openai',
-    tier: 'standard',
-    inputCostPer1M: 0.25,
-    outputCostPer1M: 2.0,
-    maxInputTokens: 400000,
-    maxOutputTokens: 128000,
-    supportsVision: true,
-    supportsStreaming: true,
-  },
-  'gpt-5-nano': {
-    id: 'gpt-5-nano',
-    displayName: 'GPT-5 Nano',
-    provider: 'openai',
-    tier: 'economy',
-    inputCostPer1M: 0.05,
-    outputCostPer1M: 0.4,
-    maxInputTokens: 400000,
-    maxOutputTokens: 128000,
-    supportsVision: true,
-    supportsStreaming: true,
-  },
-
-  // Grok Models
-  'grok-4.1-fast': {
-    id: 'grok-4-1-fast',
-    displayName: 'Grok 4.1 Fast',
-    provider: 'grok',
-    tier: 'standard',
-    inputCostPer1M: 0.2,
-    outputCostPer1M: 0.5,
-    maxInputTokens: 2000000,
-    maxOutputTokens: 16384,
-    supportsVision: true,
-    supportsStreaming: true,
-  },
-  'grok-4.1-fast-non-reasoning': {
-    id: 'grok-4-1-fast-non-reasoning',
-    displayName: 'Grok 4.1 Fast (Non-Reasoning)',
-    provider: 'grok',
-    tier: 'economy',
-    inputCostPer1M: 0.2,
-    outputCostPer1M: 0.5,
-    maxInputTokens: 2000000,
-    maxOutputTokens: 16384,
-    supportsVision: true,
-    supportsStreaming: true,
-  },
-};
-
 /**
- * Provider configurations
+ * Tier classification based on input cost per 1M tokens.
+ * premium >= 2.0, standard >= 0.2, economy < 0.2
  */
-export const AI_PROVIDERS: Record<AIProviderType, AIProviderConfig> = {
-  claude: {
-    id: 'claude',
-    name: 'Anthropic Claude',
-    displayName: 'Claude',
-    endpoint: 'https://api.anthropic.com/v1',
-    defaultModel: 'claude-sonnet-4-6',
-  },
-  gemini: {
-    id: 'gemini',
-    name: 'Google Gemini',
-    displayName: 'Gemini',
-    endpoint: 'https://generativelanguage.googleapis.com/v1beta',
-    apiKeyPrefix: 'AIza',
-    defaultModel: 'gemini-2.5-flash',
-  },
-  openai: {
-    id: 'openai',
-    name: 'OpenAI',
-    displayName: 'OpenAI',
-    endpoint: 'https://api.openai.com/v1',
-    apiKeyPrefix: 'sk-',
-    defaultModel: 'gpt-5-mini',
-  },
-  grok: {
-    id: 'grok',
-    name: 'xAI Grok',
-    displayName: 'Grok',
-    endpoint: 'https://api.x.ai/v1',
-    defaultModel: 'grok-4-1-fast',
-  },
-};
+function inferTier(cost: number): ModelTier {
+  if (cost >= 2.0) return 'premium';
+  if (cost >= 0.2) return 'standard';
+  return 'economy';
+}
 
-/**
- * Default models per feature for Reading Queue Manager
- */
-export const FEATURE_DEFAULT_MODELS: Record<FeatureType, Record<AIProviderType, string>> = {
+/** Build an extended ModelConfig from the shared one. */
+function extendModelConfig(shared: SharedModelConfig): ModelConfig {
+  return {
+    ...shared,
+    tier: inferTier(shared.inputCostPer1M),
+    maxInputTokens: shared.contextWindow,
+    maxOutputTokens: shared.defaultCompletionTokens,
+    supportsVision: true,
+    supportsStreaming: true,
+  };
+}
+
+// ── Extended MODEL_CONFIGS with tier ─────────────────────────────────
+
+export const MODEL_CONFIGS: Record<string, ModelConfig> = Object.fromEntries(
+  Object.entries(SHARED_MODEL_CONFIGS).map(([key, cfg]) => [key, extendModelConfig(cfg)])
+);
+
+// ── Re-export AI_PROVIDERS ───────────────────────────────────────────
+
+export const AI_PROVIDERS = SHARED_AI_PROVIDERS;
+
+// ── Default models per feature (plugin-specific) ─────────────────────
+
+export const FEATURE_DEFAULT_MODELS: Record<FeatureType, Record<SharedAIProviderType, string>> = {
   'url-analysis': {
     claude: 'claude-haiku-4-5-20251001',
     gemini: 'gemini-2.0-flash',
@@ -222,39 +89,40 @@ export const FEATURE_DEFAULT_MODELS: Record<FeatureType, Record<AIProviderType, 
   },
 };
 
+// ── Helper functions ─────────────────────────────────────────────────
+
 /**
- * Calculate estimated cost for token usage
+ * Calculate estimated cost for token usage.
+ * Delegates to the shared package.
  */
 export function calculateCost(
   modelKey: string,
   inputTokens: number,
   outputTokens: number
 ): number {
-  const config = MODEL_CONFIGS[modelKey];
-  if (!config) return 0;
-
-  const inputCost = (inputTokens / 1_000_000) * config.inputCostPer1M;
-  const outputCost = (outputTokens / 1_000_000) * config.outputCostPer1M;
-  return inputCost + outputCost;
+  return sharedCalculateCost(modelKey, inputTokens, outputTokens);
 }
 
 /**
- * Get models for a specific provider
+ * Get models for a specific provider (returns extended ModelConfig with tier).
  */
-export function getModelsByProvider(provider: AIProviderType): ModelConfig[] {
-  return Object.values(MODEL_CONFIGS).filter((m: ModelConfig) => m.provider === provider);
+export function getModelsByProvider(provider: SharedAIProviderType): ModelConfig[] {
+  return Object.values(MODEL_CONFIGS).filter((m) => m.provider === provider);
 }
 
 /**
- * Get model configuration by model ID
+ * Get model configuration by model ID (searches by .id field).
+ * Alias for shared getModelConfig, extended with tier.
  */
 export function getModelConfigById(modelId: string): ModelConfig | undefined {
-  return Object.values(MODEL_CONFIGS).find((m: ModelConfig) => m.id === modelId);
+  const shared = getModelConfig(modelId);
+  if (!shared) return undefined;
+  return extendModelConfig(shared);
 }
 
 /**
- * Estimate token count from text
- * Rough approximation: ~4 chars = 1 token for English, ~2 chars = 1 token for Korean
+ * Estimate token count from text.
+ * Rough approximation: ~4 chars = 1 token for English, ~2 chars = 1 token for Korean.
  */
 export function estimateTokens(text: string): number {
   const koreanChars = (text.match(/[\uAC00-\uD7AF]/g) || []).length;
@@ -263,18 +131,18 @@ export function estimateTokens(text: string): number {
 }
 
 /**
- * Get default model for a specific feature and provider
+ * Get default model for a specific feature and provider.
  */
 export function getDefaultModelForFeature(
   feature: FeatureType,
-  provider: AIProviderType
+  provider: SharedAIProviderType
 ): string {
   return FEATURE_DEFAULT_MODELS[feature][provider];
 }
 
 /**
- * Get models by tier
+ * Get models by tier.
  */
 export function getModelsByTier(tier: ModelTier): ModelConfig[] {
-  return Object.values(MODEL_CONFIGS).filter((m: ModelConfig) => m.tier === tier);
+  return Object.values(MODEL_CONFIGS).filter((m) => m.tier === tier);
 }

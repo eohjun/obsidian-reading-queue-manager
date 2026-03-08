@@ -709,195 +709,220 @@ var ObsidianReadingQueueRepository = class {
 // src/core/adapters/llm/base-provider.ts
 var import_obsidian = require("obsidian");
 
-// src/core/domain/constants/model-configs.ts
+// node_modules/obsidian-llm-shared/dist/model-configs.js
+var AI_PROVIDERS = {
+  claude: {
+    id: "claude",
+    name: "Claude",
+    displayName: "Anthropic Claude",
+    endpoint: "https://api.anthropic.com/v1",
+    defaultModel: "claude-haiku-4-5-20251001",
+    apiKeyPrefix: "sk-ant-"
+  },
+  openai: {
+    id: "openai",
+    name: "OpenAI",
+    displayName: "OpenAI GPT",
+    endpoint: "https://api.openai.com/v1",
+    defaultModel: "gpt-5-nano",
+    apiKeyPrefix: "sk-"
+  },
+  gemini: {
+    id: "gemini",
+    name: "Gemini",
+    displayName: "Google Gemini",
+    endpoint: "https://generativelanguage.googleapis.com/v1beta",
+    defaultModel: "gemini-2.5-flash",
+    apiKeyPrefix: "AIza"
+  },
+  grok: {
+    id: "grok",
+    name: "Grok",
+    displayName: "xAI Grok",
+    endpoint: "https://api.x.ai/v1",
+    defaultModel: "grok-4-1-fast"
+  }
+};
 var MODEL_CONFIGS = {
-  // Claude Models
-  "claude-opus-4.6": {
-    id: "claude-opus-4-6",
-    displayName: "Claude Opus 4.6",
-    provider: "claude",
-    tier: "premium",
-    inputCostPer1M: 5,
-    outputCostPer1M: 25,
-    maxInputTokens: 2e5,
-    maxOutputTokens: 128e3,
-    supportsVision: true,
-    supportsStreaming: true
-  },
-  "claude-sonnet-4.6": {
-    id: "claude-sonnet-4-6",
-    displayName: "Claude Sonnet 4.6",
-    provider: "claude",
-    tier: "standard",
-    inputCostPer1M: 3,
-    outputCostPer1M: 15,
-    maxInputTokens: 2e5,
-    maxOutputTokens: 64e3,
-    supportsVision: true,
-    supportsStreaming: true
-  },
-  "claude-haiku-4.5": {
-    id: "claude-haiku-4-5-20251001",
-    displayName: "Claude Haiku 4.5",
-    provider: "claude",
-    tier: "economy",
-    inputCostPer1M: 1,
-    outputCostPer1M: 5,
-    maxInputTokens: 2e5,
-    maxOutputTokens: 64e3,
-    supportsVision: true,
-    supportsStreaming: true
-  },
-  // Gemini Models
-  "gemini-3.1-pro": {
-    id: "gemini-3.1-pro-preview",
-    displayName: "Gemini 3.1 Pro",
-    provider: "gemini",
-    tier: "premium",
-    inputCostPer1M: 2,
-    outputCostPer1M: 12,
-    maxInputTokens: 1e6,
-    maxOutputTokens: 65536,
-    supportsVision: true,
-    supportsStreaming: true
-  },
-  "gemini-2.5-flash": {
-    id: "gemini-2.5-flash",
-    displayName: "Gemini 2.5 Flash",
-    provider: "gemini",
-    tier: "standard",
-    inputCostPer1M: 0.3,
-    outputCostPer1M: 2.5,
-    maxInputTokens: 1e6,
-    maxOutputTokens: 65536,
-    supportsVision: true,
-    supportsStreaming: true
-  },
-  "gemini-2-flash": {
-    id: "gemini-2.0-flash",
-    displayName: "Gemini 2.0 Flash",
-    provider: "gemini",
-    tier: "economy",
-    inputCostPer1M: 0.1,
-    outputCostPer1M: 0.4,
-    maxInputTokens: 1e6,
-    maxOutputTokens: 8192,
-    supportsVision: true,
-    supportsStreaming: true
-  },
-  // OpenAI Models
+  // ── OpenAI ── gpt-5 series: all reasoning models
+  // Thinking tokens consume from the same max_completion_tokens budget
+  // Must use max_completion_tokens (NOT max_tokens), temperature forbidden
   "gpt-5.4": {
     id: "gpt-5.4",
     displayName: "GPT-5.4",
     provider: "openai",
-    tier: "premium",
+    contextWindow: 128e3,
+    defaultCompletionTokens: 16384,
+    isReasoning: true,
     inputCostPer1M: 2.5,
-    outputCostPer1M: 15,
-    maxInputTokens: 105e4,
-    maxOutputTokens: 128e3,
-    supportsVision: true,
-    supportsStreaming: true
+    outputCostPer1M: 15
   },
   "gpt-5-mini": {
     id: "gpt-5-mini",
     displayName: "GPT-5 Mini",
     provider: "openai",
-    tier: "standard",
+    contextWindow: 128e3,
+    defaultCompletionTokens: 8192,
+    isReasoning: true,
     inputCostPer1M: 0.25,
-    outputCostPer1M: 2,
-    maxInputTokens: 4e5,
-    maxOutputTokens: 128e3,
-    supportsVision: true,
-    supportsStreaming: true
+    outputCostPer1M: 2
   },
   "gpt-5-nano": {
     id: "gpt-5-nano",
     displayName: "GPT-5 Nano",
     provider: "openai",
-    tier: "economy",
+    contextWindow: 128e3,
+    defaultCompletionTokens: 8192,
+    isReasoning: true,
     inputCostPer1M: 0.05,
-    outputCostPer1M: 0.4,
-    maxInputTokens: 4e5,
-    maxOutputTokens: 128e3,
-    supportsVision: true,
-    supportsStreaming: true
+    outputCostPer1M: 0.4
   },
-  // Grok Models
-  "grok-4.1-fast": {
+  // ── Gemini ── thinking tokens use separate budget (thinkingBudget), not maxOutputTokens
+  "gemini-3.1-pro-preview": {
+    id: "gemini-3.1-pro-preview",
+    displayName: "Gemini 3.1 Pro",
+    provider: "gemini",
+    contextWindow: 65536,
+    defaultCompletionTokens: 4096,
+    isReasoning: true,
+    inputCostPer1M: 2,
+    outputCostPer1M: 12
+  },
+  "gemini-3.1-flash-lite-preview": {
+    id: "gemini-3.1-flash-lite-preview",
+    displayName: "Gemini 3.1 Flash-Lite",
+    provider: "gemini",
+    contextWindow: 65536,
+    defaultCompletionTokens: 4096,
+    isReasoning: true,
+    inputCostPer1M: 0.25,
+    outputCostPer1M: 1.5
+  },
+  "gemini-2.5-flash": {
+    id: "gemini-2.5-flash",
+    displayName: "Gemini 2.5 Flash",
+    provider: "gemini",
+    contextWindow: 65536,
+    defaultCompletionTokens: 4096,
+    isReasoning: true,
+    inputCostPer1M: 0.3,
+    outputCostPer1M: 2.5
+  },
+  "gemini-2.0-flash": {
+    id: "gemini-2.0-flash",
+    displayName: "Gemini 2.0 Flash",
+    provider: "gemini",
+    contextWindow: 8192,
+    defaultCompletionTokens: 2048,
+    isReasoning: false,
+    inputCostPer1M: 0.1,
+    outputCostPer1M: 0.4
+  },
+  // ── Anthropic ── extended thinking opt-in via `thinking` parameter
+  // Opus 4.6: adaptive thinking (model decides budget)
+  // Sonnet 4.6: manual budget (budget_tokens < max_tokens required)
+  // Haiku 4.5: no thinking (저가, simple classification)
+  "claude-opus-4-6": {
+    id: "claude-opus-4-6",
+    displayName: "Claude Opus 4.6",
+    provider: "claude",
+    contextWindow: 128e3,
+    defaultCompletionTokens: 2048,
+    isReasoning: false,
+    inputCostPer1M: 5,
+    outputCostPer1M: 25,
+    thinkingMode: "adaptive"
+  },
+  "claude-sonnet-4-6": {
+    id: "claude-sonnet-4-6",
+    displayName: "Claude Sonnet 4.6",
+    provider: "claude",
+    contextWindow: 64e3,
+    defaultCompletionTokens: 2048,
+    isReasoning: false,
+    inputCostPer1M: 3,
+    outputCostPer1M: 15,
+    thinkingMode: "enabled",
+    thinkingBudget: 1024
+  },
+  "claude-haiku-4-5-20251001": {
+    id: "claude-haiku-4-5-20251001",
+    displayName: "Claude Haiku 4.5",
+    provider: "claude",
+    contextWindow: 64e3,
+    defaultCompletionTokens: 500,
+    isReasoning: false,
+    inputCostPer1M: 1,
+    outputCostPer1M: 5
+  },
+  // ── Grok (xAI) ──
+  "grok-4-1-fast": {
     id: "grok-4-1-fast",
     displayName: "Grok 4.1 Fast",
     provider: "grok",
-    tier: "standard",
+    contextWindow: 16384,
+    defaultCompletionTokens: 4096,
+    isReasoning: true,
     inputCostPer1M: 0.2,
-    outputCostPer1M: 0.5,
-    maxInputTokens: 2e6,
-    maxOutputTokens: 16384,
-    supportsVision: true,
-    supportsStreaming: true
+    outputCostPer1M: 0.5
   },
-  "grok-4.1-fast-non-reasoning": {
+  "grok-4-1-fast-non-reasoning": {
     id: "grok-4-1-fast-non-reasoning",
     displayName: "Grok 4.1 Fast (Non-Reasoning)",
     provider: "grok",
-    tier: "economy",
+    contextWindow: 16384,
+    defaultCompletionTokens: 4096,
+    isReasoning: false,
     inputCostPer1M: 0.2,
-    outputCostPer1M: 0.5,
-    maxInputTokens: 2e6,
-    maxOutputTokens: 16384,
+    outputCostPer1M: 0.5
+  }
+};
+function getModelConfig(modelId) {
+  return MODEL_CONFIGS[modelId];
+}
+function calculateCost(modelId, inputTokens, outputTokens) {
+  const config = getModelConfig(modelId);
+  if (!config)
+    return 0;
+  return inputTokens / 1e6 * config.inputCostPer1M + outputTokens / 1e6 * config.outputCostPer1M;
+}
+
+// src/core/domain/constants/model-configs.ts
+function inferTier(cost) {
+  if (cost >= 2) return "premium";
+  if (cost >= 0.2) return "standard";
+  return "economy";
+}
+function extendModelConfig(shared) {
+  return {
+    ...shared,
+    tier: inferTier(shared.inputCostPer1M),
+    maxInputTokens: shared.contextWindow,
+    maxOutputTokens: shared.defaultCompletionTokens,
     supportsVision: true,
     supportsStreaming: true
-  }
-};
-var AI_PROVIDERS = {
-  claude: {
-    id: "claude",
-    name: "Anthropic Claude",
-    displayName: "Claude",
-    endpoint: "https://api.anthropic.com/v1",
-    defaultModel: "claude-sonnet-4-6"
-  },
-  gemini: {
-    id: "gemini",
-    name: "Google Gemini",
-    displayName: "Gemini",
-    endpoint: "https://generativelanguage.googleapis.com/v1beta",
-    apiKeyPrefix: "AIza",
-    defaultModel: "gemini-2.5-flash"
-  },
-  openai: {
-    id: "openai",
-    name: "OpenAI",
-    displayName: "OpenAI",
-    endpoint: "https://api.openai.com/v1",
-    apiKeyPrefix: "sk-",
-    defaultModel: "gpt-5-mini"
-  },
-  grok: {
-    id: "grok",
-    name: "xAI Grok",
-    displayName: "Grok",
-    endpoint: "https://api.x.ai/v1",
-    defaultModel: "grok-4-1-fast"
-  }
-};
-function calculateCost(modelKey, inputTokens, outputTokens) {
-  const config = MODEL_CONFIGS[modelKey];
-  if (!config) return 0;
-  const inputCost = inputTokens / 1e6 * config.inputCostPer1M;
-  const outputCost = outputTokens / 1e6 * config.outputCostPer1M;
-  return inputCost + outputCost;
+  };
 }
-function getModelsByProvider(provider) {
-  return Object.values(MODEL_CONFIGS).filter((m) => m.provider === provider);
+var MODEL_CONFIGS2 = Object.fromEntries(
+  Object.entries(MODEL_CONFIGS).map(([key, cfg]) => [key, extendModelConfig(cfg)])
+);
+var AI_PROVIDERS2 = AI_PROVIDERS;
+function calculateCost2(modelKey, inputTokens, outputTokens) {
+  return calculateCost(modelKey, inputTokens, outputTokens);
+}
+function getModelsByProvider2(provider) {
+  return Object.values(MODEL_CONFIGS2).filter((m) => m.provider === provider);
 }
 function getModelConfigById(modelId) {
-  return Object.values(MODEL_CONFIGS).find((m) => m.id === modelId);
+  const shared = getModelConfig(modelId);
+  if (!shared) return void 0;
+  return extendModelConfig(shared);
 }
 
 // src/core/adapters/llm/base-provider.ts
 var BaseProvider = class {
   get config() {
-    return AI_PROVIDERS[this.id];
+    return AI_PROVIDERS2[this.id];
   }
   /**
    * HTTP request wrapper using Obsidian's requestUrl
@@ -1060,12 +1085,12 @@ var OpenAIProvider = class extends BaseProvider {
   async testApiKey(apiKey) {
     try {
       const model = this.config.defaultModel;
-      const isReasoningModel = model.startsWith("gpt-5") || model.startsWith("o1") || model.startsWith("o3");
+      const isReasoningModel2 = model.startsWith("gpt-5") || model.startsWith("o1") || model.startsWith("o3");
       const requestBody = {
         model,
         messages: [{ role: "user", content: "Hello" }]
       };
-      if (isReasoningModel) {
+      if (isReasoningModel2) {
         requestBody.max_completion_tokens = 10;
       } else {
         requestBody.max_tokens = 10;
@@ -1088,13 +1113,13 @@ var OpenAIProvider = class extends BaseProvider {
     var _a, _b, _c, _d;
     const openaiMessages = this.convertMessages(messages);
     const model = (options == null ? void 0 : options.model) || this.config.defaultModel;
-    const isReasoningModel = model.startsWith("gpt-5") || model.startsWith("o1") || model.startsWith("o3");
+    const isReasoningModel2 = model.startsWith("gpt-5") || model.startsWith("o1") || model.startsWith("o3");
     const requestBody = {
       model,
       messages: openaiMessages,
       temperature: (_a = options == null ? void 0 : options.temperature) != null ? _a : 0.7
     };
-    if (isReasoningModel) {
+    if (isReasoningModel2) {
       requestBody.max_completion_tokens = (_b = options == null ? void 0 : options.maxTokens) != null ? _b : 4096;
     } else {
       requestBody.max_tokens = (_c = options == null ? void 0 : options.maxTokens) != null ? _c : 4096;
@@ -1434,7 +1459,7 @@ var AIService = class {
     const modelId = this.getCurrentModel();
     const modelConfig = getModelConfigById(modelId);
     if (!modelConfig) return 0;
-    return calculateCost(
+    return calculateCost2(
       Object.keys(modelConfig).find(
         (key) => modelConfig.id === modelId
       ) || "",
@@ -1640,7 +1665,7 @@ var CostTracker = class {
    * Track a new usage
    */
   trackUsage(provider, model, inputTokens, outputTokens, feature) {
-    const cost = calculateCost(model, inputTokens, outputTokens);
+    const cost = calculateCost2(model, inputTokens, outputTokens);
     const record = {
       id: `usage_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
       timestamp: /* @__PURE__ */ new Date(),
@@ -3445,7 +3470,7 @@ var ReadingQueueSettingTab = class extends import_obsidian6.PluginSettingTab {
     containerEl.createEl("h3", { text: "AI Settings" });
     const aiSettings = this.plugin.settings.ai;
     new import_obsidian6.Setting(containerEl).setName("AI Provider").setDesc("Select the LLM provider to use").addDropdown((dropdown) => {
-      for (const [id, config] of Object.entries(AI_PROVIDERS)) {
+      for (const [id, config] of Object.entries(AI_PROVIDERS2)) {
         dropdown.addOption(id, config.displayName);
       }
       dropdown.setValue(aiSettings.provider).onChange(async (value) => {
@@ -3455,7 +3480,7 @@ var ReadingQueueSettingTab = class extends import_obsidian6.PluginSettingTab {
       });
     });
     const currentProvider = aiSettings.provider;
-    const providerConfig = AI_PROVIDERS[currentProvider];
+    const providerConfig = AI_PROVIDERS2[currentProvider];
     new import_obsidian6.Setting(containerEl).setName(`${providerConfig.displayName} API Key`).setDesc(`Enter your ${providerConfig.name} API key`).addText((text) => {
       text.setPlaceholder("API Key").setValue(aiSettings.apiKeys[currentProvider] || "").onChange(async (value) => {
         this.plugin.settings.ai.apiKeys[currentProvider] = value;
@@ -3487,7 +3512,7 @@ var ReadingQueueSettingTab = class extends import_obsidian6.PluginSettingTab {
         }
       });
     });
-    const models = getModelsByProvider(currentProvider);
+    const models = getModelsByProvider2(currentProvider);
     new import_obsidian6.Setting(containerEl).setName("Model").setDesc("Select the model to use").addDropdown((dropdown) => {
       for (const model of models) {
         dropdown.addOption(model.id, `${model.displayName} (${model.tier})`);
