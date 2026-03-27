@@ -1,6 +1,6 @@
 {
 	"name": "obsidian-reading-queue-manager",
-	"version": "0.2.24",
+	"version": "0.2.25",
 	"description": "읽기 자료를 수집, AI 기반 분석/태깅, 우선순위화, 상태 추적하고 완독 후 영구 노트 작성을 지원하는 PKM 도구",
 	"main": "main.js",
 	"scripts": {
@@ -20,7 +20,7 @@
 		"@types/node": "^25.0.3",
 		"esbuild": "^0.27.2",
 		"obsidian": "^1.11.0",
-		"typescript": "^5.9.3"
+		"typescript": "^6.0.2"
 	},
 	"dependencies": {
 		"obsidian-llm-shared": "github:eohjun/obsidian-llm-shared"

@@ -2,6 +2,7 @@ var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
 var __getOwnPropNames = Object.getOwnPropertyNames;
 var __hasOwnProp = Object.prototype.hasOwnProperty;
+var __defNormalProp = (obj, key, value) => key in obj ? __defProp(obj, key, { enumerable: true, configurable: true, writable: true, value }) : obj[key] = value;
 var __export = (target, all) => {
   for (var name in all)
     __defProp(target, name, { get: all[name], enumerable: true });
@@ -15,6 +16,7 @@ var __copyProps = (to, from, except, desc) => {
   return to;
 };
 var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
+var __publicField = (obj, key, value) => __defNormalProp(obj, typeof key !== "symbol" ? key + "" : key, value);
 
 // src/main.ts
 var main_exports = {};
@@ -169,6 +171,20 @@ var PriorityLevel = class _PriorityLevel {
 // src/core/domain/entities/content-analysis.ts
 var ContentAnalysis = class _ContentAnalysis {
   constructor(props) {
+    __publicField(this, "_id");
+    __publicField(this, "_itemId");
+    __publicField(this, "_title");
+    __publicField(this, "_summary");
+    __publicField(this, "_keyInsights");
+    __publicField(this, "_suggestedTags");
+    __publicField(this, "_suggestedPriority");
+    __publicField(this, "_estimatedReadingTime");
+    __publicField(this, "_language");
+    __publicField(this, "_analyzedAt");
+    __publicField(this, "_provider");
+    __publicField(this, "_model");
+    __publicField(this, "_tokensUsed");
+    __publicField(this, "_suggestedNoteTopics");
     this._id = props.id;
     this._itemId = props.itemId;
     this._title = props.title;
@@ -299,6 +315,22 @@ var ContentAnalysis = class _ContentAnalysis {
 // src/core/domain/entities/reading-item.ts
 var ReadingItem = class _ReadingItem {
   constructor(props) {
+    __publicField(this, "_id");
+    __publicField(this, "_title");
+    __publicField(this, "_url");
+    __publicField(this, "_source");
+    __publicField(this, "_status");
+    __publicField(this, "_priority");
+    __publicField(this, "_estimatedMinutes");
+    __publicField(this, "_progress");
+    __publicField(this, "_tags");
+    __publicField(this, "_notes");
+    __publicField(this, "_addedAt");
+    __publicField(this, "_startedAt");
+    __publicField(this, "_completedAt");
+    // AI Analysis
+    __publicField(this, "_analysis");
+    __publicField(this, "_linkedNotes");
     this._id = props.id;
     this._title = props.title;
     this._url = props.url;
@@ -548,8 +580,8 @@ var ReadingItem = class _ReadingItem {
 var ObsidianReadingQueueRepository = class {
   constructor(plugin) {
     this.plugin = plugin;
-    this.items = /* @__PURE__ */ new Map();
-    this.loaded = false;
+    __publicField(this, "items", /* @__PURE__ */ new Map());
+    __publicField(this, "loaded", false);
   }
   async load() {
     if (this.loaded) return;
@@ -1245,8 +1277,8 @@ var BaseProvider = class {
 var ClaudeProvider = class extends BaseProvider {
   constructor() {
     super(...arguments);
-    this.id = "claude";
-    this.name = "Anthropic Claude";
+    __publicField(this, "id", "claude");
+    __publicField(this, "name", "Anthropic Claude");
   }
   async testApiKey(apiKey) {
     try {
@@ -1306,8 +1338,8 @@ var ClaudeProvider = class extends BaseProvider {
 var OpenAIProvider = class extends BaseProvider {
   constructor() {
     super(...arguments);
-    this.id = "openai";
-    this.name = "OpenAI";
+    __publicField(this, "id", "openai");
+    __publicField(this, "name", "OpenAI");
   }
   async testApiKey(apiKey) {
     try {
@@ -1359,8 +1391,8 @@ var OpenAIProvider = class extends BaseProvider {
 var GeminiProvider = class extends BaseProvider {
   constructor() {
     super(...arguments);
-    this.id = "gemini";
-    this.name = "Google Gemini";
+    __publicField(this, "id", "gemini");
+    __publicField(this, "name", "Google Gemini");
   }
   async testApiKey(apiKey) {
     try {
@@ -1414,8 +1446,8 @@ var GeminiProvider = class extends BaseProvider {
 var GrokProvider = class extends BaseProvider {
   constructor() {
     super(...arguments);
-    this.id = "grok";
-    this.name = "xAI Grok";
+    __publicField(this, "id", "grok");
+    __publicField(this, "name", "xAI Grok");
   }
   async testApiKey(apiKey) {
     try {
@@ -1484,7 +1516,8 @@ var BudgetExceededError = class extends AIError {
 // src/core/application/services/ai-service.ts
 var AIService = class {
   constructor(settings) {
-    this.providers = /* @__PURE__ */ new Map();
+    __publicField(this, "providers", /* @__PURE__ */ new Map());
+    __publicField(this, "settings");
     this.settings = settings;
   }
   /**
@@ -1686,7 +1719,7 @@ function resetAIService() {
 // src/core/application/services/event-emitter.ts
 var EventEmitter = class {
   constructor() {
-    this.listeners = /* @__PURE__ */ new Map();
+    __publicField(this, "listeners", /* @__PURE__ */ new Map());
   }
   /**
    * Subscribe to an event
@@ -1763,7 +1796,9 @@ function resetEventEmitter() {
 // src/core/application/services/cost-tracker.ts
 var CostTracker = class {
   constructor(budgetLimit, emitter) {
-    this.records = [];
+    __publicField(this, "records", []);
+    __publicField(this, "budgetLimit");
+    __publicField(this, "emitter");
     this.budgetLimit = budgetLimit;
     this.emitter = emitter != null ? emitter : getEventEmitter();
   }
@@ -2143,6 +2178,8 @@ Guidelines:
 - Detect content language and respond in the same language for summary and insights`;
 var AnalyzeUrlContentUseCase = class {
   constructor(costTracker) {
+    __publicField(this, "aiService");
+    __publicField(this, "costTracker");
     this.aiService = getAIService();
     this.costTracker = costTracker;
   }
@@ -2371,6 +2408,9 @@ Respond with valid JSON only (no markdown):
 }`;
 var SuggestNoteTopicsUseCase = class {
   constructor(app, costTracker) {
+    __publicField(this, "aiService");
+    __publicField(this, "costTracker");
+    __publicField(this, "app");
     this.app = app;
     this.aiService = getAIService();
     this.costTracker = costTracker;
@@ -2473,8 +2513,10 @@ var import_obsidian3 = require("obsidian");
 var InsightsModal = class extends import_obsidian3.Modal {
   constructor(plugin, item) {
     super(plugin.app);
-    this.isLoadingTopics = false;
-    this.noteTopics = [];
+    __publicField(this, "plugin");
+    __publicField(this, "item");
+    __publicField(this, "isLoadingTopics", false);
+    __publicField(this, "noteTopics", []);
     this.plugin = plugin;
     this.item = item;
   }
@@ -2868,8 +2910,9 @@ var VIEW_TYPE_READING_QUEUE = "reading-queue-view";
 var ReadingQueueView = class extends import_obsidian4.ItemView {
   constructor(leaf, plugin) {
     super(leaf);
-    this.items = [];
-    this.currentFilter = {};
+    __publicField(this, "plugin");
+    __publicField(this, "items", []);
+    __publicField(this, "currentFilter", {});
     this.plugin = plugin;
   }
   getViewType() {
@@ -3110,13 +3153,27 @@ var import_obsidian5 = require("obsidian");
 var AddItemModal = class extends import_obsidian5.Modal {
   constructor(plugin, onSave, editItem) {
     super(plugin.app);
+    __publicField(this, "plugin");
+    __publicField(this, "editItem");
+    __publicField(this, "onSave");
     // Form values
-    this.title = "";
-    this.url = "";
-    this.priority = "medium" /* MEDIUM */;
-    this.tagsInput = "";
-    this.notes = "";
-    this.isAnalyzing = false;
+    __publicField(this, "title", "");
+    __publicField(this, "url", "");
+    __publicField(this, "priority", "medium" /* MEDIUM */);
+    __publicField(this, "estimatedMinutes");
+    __publicField(this, "tagsInput", "");
+    __publicField(this, "notes", "");
+    // AI Analysis state
+    __publicField(this, "analysis");
+    __publicField(this, "isAnalyzing", false);
+    __publicField(this, "analyzeButton");
+    __publicField(this, "analysisContainer");
+    __publicField(this, "autoAnalyzeTimeout");
+    // Form input elements (for auto-apply updates)
+    __publicField(this, "titleInput");
+    __publicField(this, "priorityDropdown");
+    __publicField(this, "tagsInputEl");
+    __publicField(this, "estimatedMinutesInput");
     this.plugin = plugin;
     this.onSave = onSave;
     this.editItem = editItem;
@@ -3518,6 +3575,7 @@ var DEFAULT_SETTINGS = {
 var ReadingQueueSettingTab = class extends import_obsidian6.PluginSettingTab {
   constructor(plugin) {
     super(plugin.app, plugin);
+    __publicField(this, "plugin");
     this.plugin = plugin;
   }
   display() {
@@ -3710,6 +3768,13 @@ var ReadingQueueSettingTab = class extends import_obsidian6.PluginSettingTab {
 
 // src/main.ts
 var ReadingQueuePlugin = class extends import_obsidian7.Plugin {
+  constructor() {
+    super(...arguments);
+    __publicField(this, "settings");
+    __publicField(this, "repository");
+    __publicField(this, "costTracker");
+    __publicField(this, "_repositoryImpl");
+  }
   async onload() {
     console.log("Loading Reading Queue Manager plugin");
     await this.loadSettings();
