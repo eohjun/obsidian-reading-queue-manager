@@ -3495,9 +3495,9 @@ var DEFAULT_AI_SETTINGS = {
   provider: "claude",
   apiKeys: {},
   models: {
-    claude: "claude-haiku-4-5-20251001",
+    claude: "claude-haiku-4-5",
     gemini: "gemini-2.0-flash",
-    openai: "gpt-5-nano",
+    openai: "gpt-5.4-nano",
     grok: "grok-4-1-fast-non-reasoning"
   },
   featureModels: {},
