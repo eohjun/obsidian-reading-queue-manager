@@ -1297,22 +1297,15 @@ var ClaudeProvider = class extends BaseProvider {
   }
   async testApiKey(apiKey) {
     try {
-      const body = buildAnthropicBody(
-        [{ role: "user", content: "Hello" }],
-        this.config.defaultModel,
-        { maxTokens: 10 }
-      );
       const json = await this.makeRequest({
-        url: `${this.config.endpoint}/messages`,
-        method: "POST",
+        url: `${this.config.endpoint}/models`,
+        method: "GET",
         headers: {
           "x-api-key": apiKey,
-          "anthropic-version": "2023-06-01",
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify(body)
+          "anthropic-version": "2023-06-01"
+        }
       });
-      return parseAnthropicResponse(json).success;
+      return Array.isArray(json == null ? void 0 : json.data);
     } catch (e) {
       return false;
     }
@@ -1358,18 +1351,12 @@ var OpenAIProvider = class extends BaseProvider {
   }
   async testApiKey(apiKey) {
     try {
-      const body = buildOpenAIBody(
-        [{ role: "user", content: "Hello" }],
-        this.config.defaultModel,
-        { maxTokens: 10 }
-      );
       const json = await this.makeRequest({
-        url: `${this.config.endpoint}/chat/completions`,
-        method: "POST",
-        headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
-        body: JSON.stringify(body)
+        url: `${this.config.endpoint}/models`,
+        method: "GET",
+        headers: { Authorization: `Bearer ${apiKey}` }
       });
-      return parseOpenAIResponse(json).success;
+      return Array.isArray(json == null ? void 0 : json.data);
     } catch (e) {
       return false;
     }
@@ -1411,19 +1398,11 @@ var GeminiProvider = class extends BaseProvider {
   }
   async testApiKey(apiKey) {
     try {
-      const body = buildGeminiBody(
-        [{ role: "user", content: "Hello" }],
-        this.config.defaultModel,
-        { maxTokens: 10 }
-      );
-      const url = getGeminiGenerateUrl(this.config.defaultModel, apiKey, this.config.endpoint);
       const json = await this.makeRequest({
-        url,
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body)
+        url: `${this.config.endpoint}/models?key=${apiKey}`,
+        method: "GET"
       });
-      return parseGeminiResponse(json).success;
+      return Array.isArray(json == null ? void 0 : json.models);
     } catch (e) {
       return false;
     }
@@ -1466,18 +1445,12 @@ var GrokProvider = class extends BaseProvider {
   }
   async testApiKey(apiKey) {
     try {
-      const body = buildGrokBody(
-        [{ role: "user", content: "Hello" }],
-        this.config.defaultModel,
-        { maxTokens: 10 }
-      );
       const json = await this.makeRequest({
-        url: `${this.config.endpoint}/chat/completions`,
-        method: "POST",
-        headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
-        body: JSON.stringify(body)
+        url: `${this.config.endpoint}/models`,
+        method: "GET",
+        headers: { Authorization: `Bearer ${apiKey}` }
       });
-      return parseGrokResponse(json).success;
+      return Array.isArray(json == null ? void 0 : json.data);
     } catch (e) {
       return false;
     }
