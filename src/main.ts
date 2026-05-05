@@ -1,4 +1,6 @@
 import { Plugin, WorkspaceLeaf } from 'obsidian';
+import { isDeprecatedModel, getProviderConfig } from 'obsidian-llm-shared';
+import type { AIProviderType } from 'obsidian-llm-shared';
 import { ReadingItem } from './core/domain/entities/reading-item';
 import { IReadingQueueRepository } from './core/domain/interfaces/reading-queue-repository.interface';
 import { ObsidianReadingQueueRepository } from './core/adapters/obsidian/reading-queue-repository';
@@ -164,6 +166,27 @@ export default class ReadingQueuePlugin extends Plugin {
           this.settings.ai.featureModels = { ...this.settings.ai.featureModels, ...loaded.ai.featureModels };
         }
       }
+    }
+    this.migrateDeprecatedModels();
+  }
+
+  private migrateDeprecatedModels(): void {
+    const providers: AIProviderType[] = ['claude', 'openai', 'gemini', 'grok'];
+    let changed = false;
+    const models = this.settings.ai.models as Record<string, string>;
+    for (const provider of providers) {
+      const saved = models[provider];
+      if (saved && isDeprecatedModel(saved)) {
+        const fallback = getProviderConfig(provider)?.defaultModel;
+        if (fallback) {
+          console.warn(`[reading-queue] Migrated deprecated model ${saved} → ${fallback}`);
+          models[provider] = fallback;
+          changed = true;
+        }
+      }
+    }
+    if (changed) {
+      void this.saveData(this.settings);
     }
   }
 

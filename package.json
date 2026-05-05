@@ -1,7 +1,7 @@
 {
 	"name": "obsidian-reading-queue-manager",
-	"version": "0.2.27",
-	"description": "읽기 자료를 수집, AI 기반 분석/태깅, 우선순위화, 상태 추적하고 완독 후 영구 노트 작성을 지원하는 PKM 도구",
+	"version": "0.2.28",
+	"description": "\uc77d\uae30 \uc790\ub8cc\ub97c \uc218\uc9d1, AI \uae30\ubc18 \ubd84\uc11d/\ud0dc\uae45, \uc6b0\uc120\uc21c\uc704\ud654, \uc0c1\ud0dc \ucd94\uc801\ud558\uace0 \uc644\ub3c5 \ud6c4 \uc601\uad6c \ub178\ud2b8 \uc791\uc131\uc744 \uc9c0\uc6d0\ud558\ub294 PKM \ub3c4\uad6c",
 	"main": "main.js",
 	"scripts": {
 		"dev": "node esbuild.config.mjs",
@@ -17,12 +17,12 @@
 	"author": "eohjun",
 	"license": "MIT",
 	"devDependencies": {
+		"@codemirror/state": "^6.6.0",
+		"@codemirror/view": "^6.41.1",
 		"@types/node": "^25.0.3",
 		"esbuild": "^0.27.2",
 		"obsidian": "^1.11.0",
+		"obsidian-llm-shared": "github:eohjun/obsidian-llm-shared#v1.3.0",
 		"typescript": "^6.0.2"
-	},
-	"dependencies": {
-		"obsidian-llm-shared": "github:eohjun/obsidian-llm-shared"
 	}
 }

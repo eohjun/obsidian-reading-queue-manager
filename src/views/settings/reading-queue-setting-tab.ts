@@ -21,7 +21,7 @@ export const DEFAULT_AI_SETTINGS: AISettings = {
   apiKeys: {},
   models: {
     claude: 'claude-haiku-4-5',
-    gemini: 'gemini-2.0-flash',
+    gemini: 'gemini-3.1-flash-lite-preview',
     openai: 'gpt-5.4-nano',
     grok: 'grok-4-1-fast-non-reasoning',
   },

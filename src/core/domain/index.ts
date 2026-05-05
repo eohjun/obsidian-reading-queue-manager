@@ -1,12 +1,13 @@
 // Entities
-export { ReadingItem, ReadingItemProps, ReadingItemData, ReadingSourceType } from './entities';
+export { ReadingItem } from './entities';
+export type { ReadingItemProps, ReadingItemData, ReadingSourceType } from './entities';
 
 // Value Objects
 export { ReadingStatus, ReadingStatusType } from './value-objects';
 export { PriorityLevel, PriorityLevelType } from './value-objects';
 
 // Interfaces
-export { IReadingQueueRepository, ReadingQueueStats, ReadingQueueFilter } from './interfaces';
+export type { IReadingQueueRepository, ReadingQueueStats, ReadingQueueFilter } from './interfaces';
 export * from './interfaces/llm-provider';
 
 // Constants
