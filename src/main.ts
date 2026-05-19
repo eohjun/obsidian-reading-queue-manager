@@ -167,10 +167,10 @@ export default class ReadingQueuePlugin extends Plugin {
         }
       }
     }
-    this.migrateDeprecatedModels();
+    await this.migrateDeprecatedModels();
   }
 
-  private migrateDeprecatedModels(): void {
+  private async migrateDeprecatedModels(): Promise<void> {
     const providers: AIProviderType[] = ['claude', 'openai', 'gemini', 'grok'];
     let changed = false;
     const models = this.settings.ai.models as Record<string, string>;
@@ -186,7 +186,7 @@ export default class ReadingQueuePlugin extends Plugin {
       }
     }
     if (changed) {
-      void this.saveData(this.settings);
+      await this.saveData(this.settings);
     }
   }
 
