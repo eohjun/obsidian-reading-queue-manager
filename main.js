@@ -570,7 +570,7 @@ var ReadingStatusType = /* @__PURE__ */ ((ReadingStatusType2) => {
 })(ReadingStatusType || {});
 var ReadingStatus = class _ReadingStatus {
   constructor(value) {
-    this.value = value;
+    __publicField(this, "value", value);
   }
   static queue() {
     return new _ReadingStatus("queue" /* QUEUE */);
@@ -650,7 +650,7 @@ var PriorityLevelType = /* @__PURE__ */ ((PriorityLevelType4) => {
 })(PriorityLevelType || {});
 var PriorityLevel = class _PriorityLevel {
   constructor(value) {
-    this.value = value;
+    __publicField(this, "value", value);
   }
   static high() {
     return new _PriorityLevel("high" /* HIGH */);
@@ -1113,7 +1113,7 @@ var ReadingItem = class _ReadingItem {
 // src/core/adapters/obsidian/reading-queue-repository.ts
 var ObsidianReadingQueueRepository = class {
   constructor(plugin) {
-    this.plugin = plugin;
+    __publicField(this, "plugin", plugin);
     __publicField(this, "items", /* @__PURE__ */ new Map());
     __publicField(this, "loaded", false);
   }
@@ -1563,16 +1563,16 @@ var GrokProvider = class extends BaseProvider {
 var AIError = class extends Error {
   constructor(message, code, retryable = false) {
     super(message);
-    this.code = code;
-    this.retryable = retryable;
+    __publicField(this, "code", code);
+    __publicField(this, "retryable", retryable);
     this.name = "AIError";
   }
 };
 var BudgetExceededError = class extends AIError {
   constructor(message = "Budget limit exceeded.", currentSpend, budgetLimit) {
     super(message, "BUDGET_EXCEEDED", false);
-    this.currentSpend = currentSpend;
-    this.budgetLimit = budgetLimit;
+    __publicField(this, "currentSpend", currentSpend);
+    __publicField(this, "budgetLimit", budgetLimit);
     this.name = "BudgetExceededError";
   }
 };
@@ -2007,7 +2007,7 @@ var import_obsidian4 = require("obsidian");
 // src/core/application/use-cases/add-reading-item.ts
 var AddReadingItemUseCase = class {
   constructor(repository) {
-    this.repository = repository;
+    __publicField(this, "repository", repository);
   }
   async execute(input) {
     var _a, _b;
@@ -2039,7 +2039,7 @@ var AddReadingItemUseCase = class {
 // src/core/application/use-cases/update-item-status.ts
 var UpdateItemStatusUseCase = class {
   constructor(repository) {
-    this.repository = repository;
+    __publicField(this, "repository", repository);
   }
   async execute(input) {
     try {
@@ -2092,7 +2092,7 @@ var UpdateItemStatusUseCase = class {
 // src/core/application/use-cases/update-reading-item.ts
 var UpdateReadingItemUseCase = class {
   constructor(repository) {
-    this.repository = repository;
+    __publicField(this, "repository", repository);
   }
   async execute(input) {
     try {
@@ -2138,7 +2138,7 @@ var UpdateReadingItemUseCase = class {
 // src/core/application/use-cases/delete-reading-item.ts
 var DeleteReadingItemUseCase = class {
   constructor(repository) {
-    this.repository = repository;
+    __publicField(this, "repository", repository);
   }
   async execute(input) {
     try {
@@ -2163,7 +2163,7 @@ var DeleteReadingItemUseCase = class {
 // src/core/application/use-cases/get-queue-items.ts
 var GetQueueItemsUseCase = class {
   constructor(repository) {
-    this.repository = repository;
+    __publicField(this, "repository", repository);
   }
   async execute(input = {}) {
     try {
